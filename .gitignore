@@ -1,0 +1,9 @@
+/dist
+/MANIFEST
+*pyc
+/docs/_build
+.idea/
+*.iml
+urbanairship.egg-info/
+.DS_Store
+/build
