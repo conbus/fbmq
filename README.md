@@ -17,26 +17,36 @@ page = Page(PAGE_ACCESS_TOKEN)
 ```
 page.send(recipient_id, "hello world!")
 ```
+![](./example/assets/screen1.jpg)
+
 
 #### Image (jpg, png, gif support)
 ```
 page.send(recipient_id, Attachment.Image(image_url))
 ```
+![](./example/assets/screen2.jpg)
+
 
 #### Audio
 ```
 page.send(recipient_id, Attachment.Audio(audio_url))
 ```
+![](./example/assets/screen3.jpg)
+
 
 #### Video
 ```
 page.send(recipient_id, Attachment.Video(video_url))
 ```
+![](./example/assets/screen4.jpg)
+
 
 #### File
 ```
 page.send(recipient_id, Attachment.File(file_url))
 ```
+![](./example/assets/screen5.jpg)
+
 
 #### quick reply
 ```
@@ -49,6 +59,7 @@ page.send(recipient_id,
           quick_replies=quick_replies,
           metadata="DEVELOPER_DEFINED_METADATA")
 ```
+![](./example/assets/screen6.jpg)
 
 
 #### typing on/off
@@ -56,6 +67,8 @@ page.send(recipient_id,
 page.typing_on(recipient_id)
 page.typing_off(recipient_id)
 ```
+![](./example/assets/screen7.jpg)
+
 
 
 ## Templates
@@ -69,6 +82,8 @@ buttons = [
 ]
 page.send(recipient_id, Template.Buttons("hello", buttons))
 ```
+![](./example/assets/screen8.jpg)
+
 
 #### Template : Generic
 ```
@@ -93,6 +108,7 @@ page.send(recipient_id, Template.Generic([
                           ])
 ]))
 ```
+![](./example/assets/screen9.jpg)
 
 
 #### Template : Receipt
@@ -128,4 +144,34 @@ page.send(recipient_id, Template.Generic([
                                             address=address,
                                             summary=summary,
                                             adjustments=[adjustment]))
+```
+![](./example/assets/screen10.jpg)
+
+
+
+# Handle Webhook
+
+## Usage (with flask)
+```
+from flask import Flask, request
+import fbmq
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+  payload = request.get_date(as_text=True)
+  fbmq.handle_webhook(payload,
+                      optin=optin_handler,
+                      message=message_handler,
+                      delivery=delivery_handler,
+                      postback=postback_handler,
+                      read=read_handler,
+                      account_linking=account_linking_handler)
+  return "ok"
+
+def message_handler(event):
+  sender_id = event['sender']['id']
+  message = event['message']
+  
+  page = fbmq.Page(PAGE_ACCESS_TOKEN)  
+  page.send(sender_id, "thank you! your message is '%s'" % message)
 ```
