@@ -3,6 +3,8 @@ https://github.com/fbsamples/messenger-platform-samples python porting version
 
 ### Setting
 ```
+virtualenv env
+source env/bin/activate
 pip install -r requirements.txt
 ```
 
