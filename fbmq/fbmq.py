@@ -13,22 +13,47 @@ def handle_webhook(payload, optin=None, message=None, delivery=None,
         for entry in data.get("entry"):
             for event in entry.get("messaging"):
                 if 'optin' in event:
-                    optin(event) if optin is not None else print("there's no optin handler")
+                    try:
+                        optin(event)
+                    except:
+                        print("there's no optin handler")
                 elif 'message' in event:
-                    message(event) if optin is not None else print("there's no message handler")
+                    try:
+                        message(event)
+                    except:
+                        print("there's no message handler")
                 elif 'delivery' in event:
-                    delivery(event) if optin is not None else print("there's no delivery handler")
+                    try:
+                        delivery(event)
+                    except:
+                        print("there's no delivery handler")
                 elif 'postback' in event:
-                    postback(event) if optin is not None else print("there's no postback handler")
+                    try:
+                        postback(event)
+                    except:
+                        print("there's no postback handler")
                 elif 'read' in event:
-                    read(event) if optin is not None else print("there's no read handler")
+                    try:
+                        read(event)
+                    except:
+                        print("there's no read handler")
                 elif 'account_linking' in event:
-                    account_linking(event) if optin is not None else print("there's no account_linking handler")
+                    try:
+                        account_linking(event)
+                    except:
+                        print("there's no account_linking handler")
                 else:
                     print("Webhook received unknown messagingEvent:", event)
     else:
         print("Webhook failed, only support page subscription")
 
+
+def _call_function(handler, event):
+    print(list(locals().iteritems()))
+    try:
+        handler(event)
+    except:
+        print("there's no handler '%s'" % handler)
 
 class Page(object):
     def __init__(self, page_access_token):
