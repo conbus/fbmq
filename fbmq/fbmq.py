@@ -48,13 +48,6 @@ def handle_webhook(payload, optin=None, message=None, delivery=None,
         print("Webhook failed, only support page subscription")
 
 
-def _call_function(handler, event):
-    print(list(locals().iteritems()))
-    try:
-        handler(event)
-    except:
-        print("there's no handler '%s'" % handler)
-
 class Page(object):
     def __init__(self, page_access_token):
         self.page_access_token = page_access_token
