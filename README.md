@@ -53,35 +53,30 @@ page = Page(PAGE_ACCESS_TOKEN)
 ```
 page.send(recipient_id, "hello world!")
 ```
-![](./example/assets/screen1.jpg)
 
 
 #### Image (jpg, png, gif support)
 ```
 page.send(recipient_id, Attachment.Image(image_url))
 ```
-![](./example/assets/screen2.jpg)
 
 
 #### Audio
 ```
 page.send(recipient_id, Attachment.Audio(audio_url))
 ```
-![](./example/assets/screen3.jpg)
-
 
 #### Video
 ```
 page.send(recipient_id, Attachment.Video(video_url))
 ```
-![](./example/assets/screen4.jpg)
 
 
 #### File
 ```
 page.send(recipient_id, Attachment.File(file_url))
 ```
-![](./example/assets/screen5.jpg)
+
 
 
 #### quick reply
@@ -95,7 +90,7 @@ page.send(recipient_id,
           quick_replies=quick_replies,
           metadata="DEVELOPER_DEFINED_METADATA")
 ```
-![](./example/assets/screen6.jpg)
+
 
 
 #### typing on/off
@@ -103,8 +98,13 @@ page.send(recipient_id,
 page.typing_on(recipient_id)
 page.typing_off(recipient_id)
 ```
-![](./example/assets/screen7.jpg)
 
+![](./example/assets/screen2.jpg)
+![](./example/assets/screen3.jpg)
+![](./example/assets/screen4.jpg)
+![](./example/assets/screen5.jpg)
+![](./example/assets/screen6.jpg)
+![](./example/assets/screen7.jpg)
 
 
 ## Templates
@@ -118,7 +118,7 @@ buttons = [
 ]
 page.send(recipient_id, Template.Buttons("hello", buttons))
 ```
-![](./example/assets/screen8.jpg)
+
 
 
 #### Template : Generic
@@ -144,7 +144,6 @@ page.send(recipient_id, Template.Generic([
                           ])
 ]))
 ```
-![](./example/assets/screen9.jpg)
 
 
 #### Template : Receipt
@@ -181,6 +180,9 @@ page.send(recipient_id, Template.Generic([
                                             summary=summary,
                                             adjustments=[adjustment]))
 ```
+
+![](./example/assets/screen8.jpg)
+![](./example/assets/screen9.jpg)
 ![](./example/assets/screen10.jpg)
 
 
