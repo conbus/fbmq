@@ -2,50 +2,43 @@ import json
 import requests
 
 
-def handle_webhook(payload, optin=None, message=None, delivery=None,
+def _call_function(name, func, *args, **kwargs):
+    try:
+        func(*args, **kwargs)
+    except TypeError:
+        print("there's no %s handler" % name)
+
+
+def handle_webhook(payload, optin=None, message=None, echo=None, delivery=None,
                    postback=None, read=None, account_linking=None):
     data = json.loads(payload)
 
     # Make sure this is a page subscription
-    if data.get("object") == "page":
-        # Iterate over each entry
-        # There may be multiple if batched
-        for entry in data.get("entry"):
-            for event in entry.get("messaging"):
-                if 'optin' in event:
-                    try:
-                        optin(event)
-                    except:
-                        print("there's no optin handler")
-                elif 'message' in event:
-                    try:
-                        message(event)
-                    except:
-                        print("there's no message handler")
-                elif 'delivery' in event:
-                    try:
-                        delivery(event)
-                    except:
-                        print("there's no delivery handler")
-                elif 'postback' in event:
-                    try:
-                        postback(event)
-                    except:
-                        print("there's no postback handler")
-                elif 'read' in event:
-                    try:
-                        read(event)
-                    except:
-                        print("there's no read handler")
-                elif 'account_linking' in event:
-                    try:
-                        account_linking(event)
-                    except:
-                        print("there's no account_linking handler")
-                else:
-                    print("Webhook received unknown messagingEvent:", event)
-    else:
+    if data.get("object") != "page":
         print("Webhook failed, only support page subscription")
+        return
+
+    # Iterate over each entry
+    # There may be multiple if batched
+    for entry in data.get("entry"):
+        for event in entry.get("messaging"):
+            if 'optin' in event:
+                _call_function('optin', optin, event)
+            elif 'message' in event:
+                if event.get("message", {}).get("is_echo"):
+                    _call_function('echo', echo, event)
+                else:
+                    _call_function('message', message, event)
+            elif 'delivery' in event:
+                _call_function('delivery', delivery, event)
+            elif 'postback' in event:
+                _call_function('postback', postback, event)
+            elif 'read' in event:
+                _call_function('read', read, event)
+            elif 'account_linking' in event:
+                _call_function('account_linking', account_linking, event)
+            else:
+                print("Webhook received unknown messagingEvent:", event)
 
 
 class Page(object):
@@ -109,7 +102,7 @@ class Recipient(object):
         self.id = id
         self.phone_number = phone_number
 
-
+1
 class Message(object):
     """
     https://developers.facebook.com/docs/messenger-platform/send-api-reference#message

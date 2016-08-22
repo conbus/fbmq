@@ -28,6 +28,7 @@ def webhook():
     fbmq.handle_webhook(payload,
                         optin=messenger.received_authentication,
                         message=messenger.received_message,
+                        echo=messenger.received_echo,
                         delivery=messenger.received_delivery_confirmation,
                         postback=messenger.received_postback,
                         read=messenger.received_message_read,

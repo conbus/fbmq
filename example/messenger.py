@@ -30,6 +30,15 @@ def received_authentication(event):
     fbpage.send(sender_id, "Authentication successful")
 
 
+def received_echo(event):
+    message = event.get("message", {})
+    message_id = message.get("mid")
+    app_id = message.get("app_id")
+    metadata = message.get("metadata")
+
+    print("Received echo for message %s and app %s with metadata %s" % (message_id, app_id, metadata))
+
+
 def received_message(event):
     sender_id = event.get("sender", {}).get("id")
     recipient_id = event.get("recipient", {}).get("id")
@@ -40,7 +49,6 @@ def received_message(event):
     print(message)
 
     seq = message.get("seq", 0)
-    is_echo = message.get("is_echo")
     message_id = message.get("mid")
     app_id = message.get("app_id")
     metadata = message.get("metadata")
@@ -56,10 +64,7 @@ def received_message(event):
     else:
         USER_SEQ[seq_id] = seq
 
-    if is_echo:
-        print("Received echo for message %s and app %s with metadata %s" % (message_id, app_id, metadata))
-        return None
-    elif quick_reply:
+    if quick_reply:
         quick_reply_payload = quick_reply.get('payload')
         print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 

@@ -22,6 +22,7 @@ def webhook():
   fbmq.handle_webhook(payload,
                       optin=optin_handler,
                       message=message_handler,
+                      echo=echo_handler,
                       delivery=delivery_handler,
                       postback=postback_handler,
                       read=read_handler,
