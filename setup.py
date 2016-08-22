@@ -1,3 +1,4 @@
+import re
 from distutils.core import setup
 
 
@@ -46,7 +47,6 @@ setup(name='fbmq',
       author='kimwz',
       author_email='kimwz.kr@gmail.com',
       packages=['fbmq'],
-      py_modules=['fbmq'],
-      install_requires=['requests>=2.0'],
+      install_requires=['requests>=2.0', 'flask'],
       keywords='Facebook Messenger Platform Chatbot',
-)
+      )

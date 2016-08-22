@@ -1,8 +1,9 @@
 # coding: utf-8
 
 from flask import Flask, request, send_from_directory, render_template
-from config import CONFIG
-import messenger
+
+from example import messenger
+from .config import CONFIG
 import fbmq
 
 app = Flask(__name__)
