@@ -1,9 +1,42 @@
 # FBMQ (Facebook Messenger Platform Library)
 A Python Library For Using The Facebook Messenger Platform API (Python Facebook Chatbot Library)
 
+# Install
+```
+pip install fbmq
+```
+
+# Handle Webhook
+
+## Usage (with flask)
+```
+from flask import Flask, request
+import fbmq
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+  payload = request.get_date(as_text=True)
+  fbmq.handle_webhook(payload,
+                      optin=optin_handler,
+                      message=message_handler,
+                      delivery=delivery_handler,
+                      postback=postback_handler,
+                      read=read_handler,
+                      account_linking=account_linking_handler)
+  return "ok"
+
+def message_handler(event):
+  sender_id = event['sender']['id']
+  message = event['message']
+  
+  page = fbmq.Page(PAGE_ACCESS_TOKEN)  
+  page.send(sender_id, "thank you! your message is '%s'" % message)
+```
+
+
 # Request
 
-## Setup
+## Setting
 
 ```
 from fbmq import Attachment, Template, QuickReply, Page
@@ -148,30 +181,14 @@ page.send(recipient_id, Template.Generic([
 ![](./example/assets/screen10.jpg)
 
 
+# Example
 
-# Handle Webhook
-
-## Usage (with flask)
+1. fill example/config.py
+2. run server
 ```
-from flask import Flask, request
-import fbmq
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-  payload = request.get_date(as_text=True)
-  fbmq.handle_webhook(payload,
-                      optin=optin_handler,
-                      message=message_handler,
-                      delivery=delivery_handler,
-                      postback=postback_handler,
-                      read=read_handler,
-                      account_linking=account_linking_handler)
-  return "ok"
-
-def message_handler(event):
-  sender_id = event['sender']['id']
-  message = event['message']
-  
-  page = fbmq.Page(PAGE_ACCESS_TOKEN)  
-  page.send(sender_id, "thank you! your message is '%s'" % message)
+cd example
+virtualenv env
+source env/bin/activate
+pip install -r requirements.txt
+python server.py
 ```
