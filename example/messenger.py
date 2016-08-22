@@ -1,5 +1,5 @@
 import json
-from .config import CONFIG
+from config import CONFIG
 from fbmq import Attachment, Template, QuickReply, Page
 USER_SEQ = {}
 fbpage = Page(CONFIG['FACEBOOK_TOKEN'])
