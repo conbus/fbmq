@@ -99,12 +99,6 @@ page.typing_on(recipient_id)
 page.typing_off(recipient_id)
 ```
 
-![](./example/assets/screen2.jpg)
-![](./example/assets/screen3.jpg)
-![](./example/assets/screen4.jpg)
-![](./example/assets/screen5.jpg)
-![](./example/assets/screen6.jpg)
-![](./example/assets/screen7.jpg)
 
 
 ## Templates
@@ -181,9 +175,6 @@ page.send(recipient_id, Template.Generic([
                                             adjustments=[adjustment]))
 ```
 
-![](./example/assets/screen8.jpg)
-![](./example/assets/screen9.jpg)
-![](./example/assets/screen10.jpg)
 
 
 # Example
@@ -197,3 +188,13 @@ source env/bin/activate
 pip install -r requirements.txt
 python server.py
 ```
+
+![](./example/assets/screen2.jpg)
+![](./example/assets/screen3.jpg)
+![](./example/assets/screen4.jpg)
+![](./example/assets/screen5.jpg)
+![](./example/assets/screen6.jpg)
+![](./example/assets/screen7.jpg)
+![](./example/assets/screen8.jpg)
+![](./example/assets/screen9.jpg)
+![](./example/assets/screen10.jpg)
