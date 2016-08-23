@@ -18,7 +18,7 @@ import fbmq
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-  payload = request.get_date(as_text=True)
+  payload = request.get_data(as_text=True)
   fbmq.handle_webhook(payload,
                       optin=optin_handler,
                       message=message_handler,
