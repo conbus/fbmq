@@ -3,10 +3,10 @@ import requests
 
 
 def _call_function(name, func, *args, **kwargs):
-    try:
-        func(*args, **kwargs)
-    except TypeError:
+    if func is None:
         print("there's no %s handler" % name)
+    else:
+        func(*args, **kwargs)
 
 
 def handle_webhook(payload, optin=None, message=None, echo=None, delivery=None,
@@ -42,12 +42,44 @@ def handle_webhook(payload, optin=None, message=None, echo=None, delivery=None,
 
 
 class Page(object):
+
     def __init__(self, page_access_token):
         self.page_access_token = page_access_token
 
-    def _send(self, payload):
-        print(payload.to_json())
+    _page_id = None
+    _page_name = None
 
+    @property
+    def page_id(self):
+        if self._page_id is None:
+            self._fetch_page_info()
+
+        return self._page_id
+
+    @property
+    def page_name(self):
+        if self._page_name is None:
+            self._fetch_page_info()
+
+        return self._page_name
+
+    def _fetch_page_info(self):
+        r = requests.get("https://graph.facebook.com/v2.6/me",
+                          params={"access_token": self.page_access_token},
+                          headers={'Content-type': 'application/json'})
+
+        if r.status_code != requests.codes.ok:
+            print(r.text)
+            return
+
+        data = json.loads(r.text)
+        if 'id' not in data or 'name' not in data:
+            raise ValueError('Could not fetch data : GET /v2.6/me')
+
+        self._page_id = data['id']
+        self._page_name = data['name']
+
+    def _send(self, payload):
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                           params={"access_token": self.page_access_token},
                           data=payload.to_json(),
@@ -102,7 +134,7 @@ class Recipient(object):
         self.id = id
         self.phone_number = phone_number
 
-1
+
 class Message(object):
     """
     https://developers.facebook.com/docs/messenger-platform/send-api-reference#message
