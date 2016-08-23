@@ -86,10 +86,17 @@ quick_replies = [
   QuickReply(title="Action", payload="PICK_ACTION"),
   QuickReply(title="Comedy", payload="PICK_COMEDY")
 ]
+
 page.send(recipient_id, 
           "What's your favorite movie genre?",
           quick_replies=quick_replies,
           metadata="DEVELOPER_DEFINED_METADATA")
+```
+
+you can use dict instead of QuickReply class
+```
+quick_replies = [{'title': 'Action', 'payload': 'PICK_ACTION'},
+                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}}
 ```
 
 
@@ -108,12 +115,17 @@ page.typing_off(recipient_id)
 ```
 buttons = [
   Attachment.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
-  Attachment.ButtonPostBack("tigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
+  Attachment.ButtonPostBack("trigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
   Attachment.ButtonPhoneNumber("Call Phone Number", "+16505551234")
 ]
 page.send(recipient_id, Template.Buttons("hello", buttons))
 ```
-
+you can use dict instead of Button class
+```
+buttons = [{'type': 'web_url', 'title': 'Open Web URL', 'value': 'https://www.oculus.com/en-us/rift/'},
+          {'type': 'postback', 'title': 'trigger Postback', 'value': 'DEVELOPED_DEFINED_PAYLOAD'},
+          {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'}]
+```
 
 
 #### Template : Generic
