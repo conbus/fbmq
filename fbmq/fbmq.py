@@ -42,7 +42,6 @@ def handle_webhook(payload, optin=None, message=None, echo=None, delivery=None,
 
 
 class Page(object):
-
     def __init__(self, page_access_token):
         self.page_access_token = page_access_token
 
@@ -65,8 +64,8 @@ class Page(object):
 
     def _fetch_page_info(self):
         r = requests.get("https://graph.facebook.com/v2.6/me",
-                          params={"access_token": self.page_access_token},
-                          headers={'Content-type': 'application/json'})
+                         params={"access_token": self.page_access_token},
+                         headers={'Content-type': 'application/json'})
 
         if r.status_code != requests.codes.ok:
             print(r.text)
@@ -144,8 +143,26 @@ class Message(object):
     def __init__(self, text=None, attachment=None, quick_replies=None, metadata=None):
         self.text = text
         self.attachment = attachment
-        self.quick_replies = quick_replies
+        self.quick_replies = Message.convert_shortcut_quick_reply(quick_replies)
         self.metadata = metadata
+
+    @staticmethod
+    def convert_shortcut_quick_reply(items):
+        """
+        support shortcut [{'title':'title', 'payload':'payload'}]
+        """
+        if items is not None and isinstance(items, list):
+            result = []
+            for item in items:
+                if isinstance(item, QuickReply):
+                    result.append(item)
+                elif isinstance(item, dict):
+                    result.append(QuickReply(title=item.get('title'), payload=item.get('payload')))
+                else:
+                    raise ValueError('Invalid quick_replies variables')
+            return result
+        else:
+            return items
 
 
 class QuickReply(object):

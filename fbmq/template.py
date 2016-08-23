@@ -4,25 +4,60 @@ class Buttons(object):
         self.payload = {
             'template_type': 'button',
             'text': text,
-            'buttons': buttons
+            'buttons': Buttons.convert_shortcut_buttons(buttons)
         }
 
+    @staticmethod
+    def convert_shortcut_buttons(items):
+        """
+        support shortcut buttons [{'type':'web_url', 'title':'open web url', 'value':'https://~~'}]
+        """
+        if items is not None and isinstance(items, list):
+            result = []
+            for item in items:
+                if isinstance(item, BaseButton):
+                    result.append(item)
+                elif isinstance(item, dict):
+                    if item.get('type') in ['web_url', 'postback', 'phone_number']:
+                        type = item.get('type')
+                        title = item.get('title')
+                        value = item.get('value')
 
-class ButtonWeb(object):
+                        if type == 'web_url':
+                            result.append(ButtonWeb(title=title, url=value))
+                        elif type == 'postback':
+                            result.append(ButtonPostBack(title=title, payload=value))
+                        elif type == 'phone_number':
+                            result.append(ButtonPhoneNumber(title=title, payload=value))
+
+                    else:
+                        raise ValueError('Invalid button type')
+                else:
+                    raise ValueError('Invalid buttons variables')
+            return result
+        else:
+            return items
+
+
+class BaseButton(object):
+    pass
+
+
+class ButtonWeb(BaseButton):
     def __init__(self, title, url):
         self.type = 'web_url'
         self.title = title
         self.url = url
 
 
-class ButtonPostBack(object):
+class ButtonPostBack(BaseButton):
     def __init__(self, title, payload):
         self.type = 'postback'
         self.title = title
         self.payload = payload
 
 
-class ButtonPhoneNumber(object):
+class ButtonPhoneNumber(BaseButton):
     def __init__(self, title, payload):
         self.type = 'phone_number'
         self.title = title
@@ -44,7 +79,7 @@ class GenericElement(object):
         self.subtitle = subtitle
         self.item_url = item_url
         self.image_url = image_url
-        self.buttons = buttons
+        self.buttons = Buttons.convert_shortcut_buttons(buttons)
 
 
 class Receipt(object):

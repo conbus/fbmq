@@ -1,6 +1,7 @@
 import json
 from config import CONFIG
 from fbmq import Attachment, Template, QuickReply, Page
+
 USER_SEQ = {}
 fbpage = Page(CONFIG['FACEBOOK_TOKEN'])
 
@@ -68,7 +69,7 @@ def received_message(event):
         quick_reply_payload = quick_reply.get('payload')
         print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
-        fbpage.send(sender_id, "Quic reply tapped")
+        fbpage.send(sender_id, "Quick reply tapped")
 
     if message_text:
         send_message(sender_id, message_text)
@@ -164,6 +165,14 @@ def send_file(recipient):
 
 
 def send_button(recipient):
+    """
+    Shortcuts are supported
+    fbpage.send(recipient, Template.Buttons("hello", [
+        {'type': 'web_url', 'title': 'Open Web URL', 'value': 'https://www.oculus.com/en-us/rift/'},
+        {'type': 'postback', 'title': 'tigger Postback', 'value': 'DEVELOPED_DEFINED_PAYLOAD'},
+        {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'},
+    ]))
+    """
     fbpage.send(recipient, Template.Buttons("hello", [
         Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
         Template.ButtonPostBack("tigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
@@ -187,9 +196,11 @@ def send_generic(recipient):
                                 item_url="https://www.oculus.com/en-us/touch/",
                                 image_url=CONFIG['SERVER_URL'] + "/assets/touch.png",
                                 buttons=[
-                                    Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
-                                    Template.ButtonPostBack("tigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
-                                    Template.ButtonPhoneNumber("Call Phone Number", "+16505551234")
+                                    {'type': 'web_url', 'title': 'Open Web URL',
+                                     'value': 'https://www.oculus.com/en-us/rift/'},
+                                    {'type': 'postback', 'title': 'tigger Postback',
+                                     'value': 'DEVELOPED_DEFINED_PAYLOAD'},
+                                    {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'},
                                 ])
     ]))
 
@@ -230,10 +241,17 @@ def send_receipt(recipient):
 
 
 def send_quick_reply(recipient):
+    """
+    shortcuts are supported
     fbpage.send(recipient, "What's your favorite movie genre?",
-              quick_replies=[QuickReply(title="Action", payload="PICK_ACTION"),
-                             QuickReply(title="Comedy", payload="PICK_COMEDY")],
-              metadata="DEVELOPER_DEFINED_METADATA")
+                quick_replies=[{'title': 'Action', 'payload': 'PICK_ACTION'},
+                               {'title': 'Comedy', 'payload': 'PICK_COMEDY'}, ],
+                metadata="DEVELOPER_DEFINED_METADATA")
+    """
+    fbpage.send(recipient, "What's your favorite movie genre?",
+                quick_replies=[QuickReply(title="Action", payload="PICK_ACTION"),
+                               QuickReply(title="Comedy", payload="PICK_COMEDY")],
+                metadata="DEVELOPER_DEFINED_METADATA")
 
 
 def send_read_receipt(recipient):
