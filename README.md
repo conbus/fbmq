@@ -1,5 +1,5 @@
 # FBMQ (Facebook Messenger Platform Python Library)
-[![PyPI](https://img.shields.io/pypi/v/fbmq.svg?v=1&maxAge=2592000)](https://pypi.python.org/pypi/fbmq)
+[![PyPI](https://img.shields.io/pypi/v/fbmq.svg?v=1&maxAge=3600)](https://pypi.python.org/pypi/fbmq)
 [![PyPI](https://img.shields.io/pypi/l/fbmq.svg?v=1&maxAge=2592000)](https://pypi.python.org/pypi/fbmq)
 
 A Python Library For Using The Facebook Messenger Platform API (Python Facebook Chat & Chatbot Library)
