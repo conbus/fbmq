@@ -13,7 +13,7 @@ pip install fbmq
 # Handle Webhook
 
 ## Usage (with flask)
-```
+```python
 from flask import Flask, request
 from fbmq import Page
 
@@ -48,7 +48,7 @@ def message_handler(event):
 `@page.handle_account_linking` - This callback will occur when the Linked Account or Unlink Account call-to-action have been tapped.
 
 #### if you don't need a decorator
-```
+```python
 @app.route('/webhook', methods=['POST'])
 def webhook():
   page.handle_webhook(request.get_data(as_text=True),
@@ -67,46 +67,52 @@ def message_handler(event):
 ## Basic
 
 #### Import
-```
+```python
 from fbmq import Attachment, Template, QuickReply, Page
 ```
 
 #### Text
-```
+```python
 page.send(recipient_id, "hello world!")
 ```
 
 
 #### Image (jpg, png, gif support)
-```
+```python
 page.send(recipient_id, Attachment.Image(image_url))
 ```
 
 
 #### Audio
-```
+```python
 page.send(recipient_id, Attachment.Audio(audio_url))
 ```
 
 #### Video
-```
+```python
 page.send(recipient_id, Attachment.Video(video_url))
 ```
 
 
 #### File
-```
+```python
 page.send(recipient_id, Attachment.File(file_url))
 ```
 
 
 
 #### quick reply
-```
+```python
 quick_replies = [
   QuickReply(title="Action", payload="PICK_ACTION"),
   QuickReply(title="Comedy", payload="PICK_COMEDY")
 ]
+
+# you can use a dict instead of a QuickReply class
+#
+# quick_replies = [{'title': 'Action', 'payload': 'PICK_ACTION'},
+#                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}}
+
 
 page.send(recipient_id, 
           "What's your favorite movie genre?",
@@ -114,14 +120,8 @@ page.send(recipient_id,
           metadata="DEVELOPER_DEFINED_METADATA")
 ```
 
-you can use dict instead of QuickReply class
-```
-quick_replies = [{'title': 'Action', 'payload': 'PICK_ACTION'},
-                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}}
-```
-
-you can define quick reply callback method easily.
-```
+__you can define easily a quick reply callback method.__
+```python
 @page.callback_quick_reply(['PICK_ACTION', 'PICK_COMEDY'])
 def callback_picked_genre(payload, event):
   print(payload, event)
@@ -129,7 +129,7 @@ def callback_picked_genre(payload, event):
 
 
 #### typing on/off
-```
+```python
 page.typing_on(recipient_id)
 page.typing_off(recipient_id)
 ```
@@ -139,22 +139,24 @@ page.typing_off(recipient_id)
 ## Templates
 
 #### Template : Button
-```
+```python
 buttons = [
   Attachment.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
   Attachment.ButtonPostBack("trigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
   Attachment.ButtonPhoneNumber("Call Phone Number", "+16505551234")
 ]
+
+# you can use a dict instead of a Button class
+#
+# buttons = [{'type': 'web_url', 'title': 'Open Web URL', 'value': 'https://www.oculus.com/en-us/rift/'},
+#          {'type': 'postback', 'title': 'trigger Postback', 'value': 'DEVELOPED_DEFINED_PAYLOAD'},
+#          {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'}]
+
 page.send(recipient_id, Template.Buttons("hello", buttons))
 ```
-you can use dict instead of Button class
-```
-buttons = [{'type': 'web_url', 'title': 'Open Web URL', 'value': 'https://www.oculus.com/en-us/rift/'},
-          {'type': 'postback', 'title': 'trigger Postback', 'value': 'DEVELOPED_DEFINED_PAYLOAD'},
-          {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'}]
-```
-you can define button postback method easily (it works only postback type buttons).
-```
+
+__you can define easily a button postback method (it works only postback type buttons).__
+```python
 @page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
 def callback_clicked_button(payload, event):
   print(payload, event)
@@ -162,7 +164,7 @@ def callback_clicked_button(payload, event):
 
 
 #### Template : Generic
-```
+```python
 page.send(recipient_id, Template.Generic([
   Template.GenericElement("rift",
                           subtitle="Next-generation virtual reality",
@@ -187,7 +189,7 @@ page.send(recipient_id, Template.Generic([
 
 
 #### Template : Receipt
-```
+```python
     element = Template.ReceiptElement(title="Oculus Rift",
                                       subtitle="Includes: headset, sensor, remote",
                                       quantity=1,
@@ -227,7 +229,7 @@ page.send(recipient_id, Template.Generic([
 
 1. fill example/config.py
 2. run server
-```
+```bash
 cd example
 virtualenv env
 source env/bin/activate
