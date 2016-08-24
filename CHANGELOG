@@ -1,0 +1,11 @@
+FBMQ Changelog
+==============
+
+Latest
+------
+
+1.5.1
+-----
+
+* Support decorators (message handlers and button/quickreply callbacks)
+* Deprecated fbmq.handler_webhook method (must use page.handler_webhoo)
