@@ -311,3 +311,29 @@ class PageTest(unittest.TestCase):
         self.page.handle_webhook(payload, postback=handler1)
         self.assertEquals(1, counter1.call_count)
         self.assertEquals(1, counter2.call_count)
+
+    def test_callback_regex_pattern(self):
+        payload = """
+        {"object":"page","entry":[{"id":"1691462197845448","time":1472028637866,
+        "messaging":[{
+            "sender":{"id":"1134343043305865"},"recipient":{"id":"1691462197845448"},"timestamp":1472028637825,
+            "message":{"quick_reply":{"payload":"ACTION/1"},"mid":"mid.1472028637817:ae2763cc036a664b43","seq":834,"text":"Action"}}]}]}
+        """
+
+        counter1 = mock.MagicMock()
+
+        @self.page.callback_quick_reply(['ACTION'])
+        def callback(payload, event):
+            counter1()
+
+        self.page.handle_webhook(payload)
+
+        self.assertEquals(0, counter1.call_count)
+
+        @self.page.callback_quick_reply(['ACTION/(.+)'])
+        def callback2(payload, event):
+            counter1()
+
+        self.page.handle_webhook(payload)
+
+        self.assertEquals(1, counter1.call_count)

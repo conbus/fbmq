@@ -4,6 +4,11 @@ FBMQ Changelog
 Latest
 ------
 
+1.6.0
+-----
+
+* Support regex in button/quickreply callbacks.
+
 1.5.4
 -----
 

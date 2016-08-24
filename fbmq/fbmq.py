@@ -1,4 +1,5 @@
 import json
+import re
 import requests
 
 from .payload import *
@@ -14,6 +15,9 @@ class Page(object):
 
     _quick_reply_callbacks = {}
     _button_callbacks = {}
+
+    _quick_reply_callbacks_key_regex = {}
+    _button_callbacks_key_regex = {}
 
     def _call_handler(self, name, func, *args, **kwargs):
         if func is not None:
@@ -172,12 +176,25 @@ class Page(object):
 
     def has_quick_reply_callback(self, event):
         payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
-        return payload in self._quick_reply_callbacks
+        for key in self._quick_reply_callbacks.keys():
+            if key not in self._quick_reply_callbacks_key_regex:
+                self._quick_reply_callbacks_key_regex[key] = re.compile(key + '$')
+
+            if self._quick_reply_callbacks_key_regex[key].match(payload):
+                return True
+
+        return False
 
     def call_quick_reply_callback(self, event):
         payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
-        if payload in self._quick_reply_callbacks:
-            self._quick_reply_callbacks[payload](payload, event=event)
+
+        for key in self._quick_reply_callbacks.keys():
+            if key not in self._quick_reply_callbacks_key_regex:
+                self._quick_reply_callbacks_key_regex[key] = re.compile(key + '$')
+
+            if self._quick_reply_callbacks_key_regex[key].match(payload):
+                self._quick_reply_callbacks[key](payload, event=event)
+                return
 
     def callback_button(self, payloads=None):
         def wrapper(func):
@@ -192,9 +209,21 @@ class Page(object):
 
     def has_postback_callback(self, event):
         payload = event.get("postback", {}).get("payload", '')
-        return payload in self._button_callbacks
+        for key in self._button_callbacks.keys():
+            if key not in self._button_callbacks_key_regex:
+                self._button_callbacks_key_regex[key] = re.compile(key + '$')
+
+            if self._button_callbacks_key_regex[key].match(payload):
+                return True
+
+        return False
 
     def call_postback_callback(self, event):
         payload = event.get("postback", {}).get("payload", '')
-        if payload in self._button_callbacks:
-            self._button_callbacks[payload](payload, event=event)
+        for key in self._button_callbacks.keys():
+            if key not in self._button_callbacks_key_regex:
+                self._button_callbacks_key_regex[key] = re.compile(key + '$')
+
+            if self._button_callbacks_key_regex[key].match(payload):
+                self._button_callbacks[key](payload, event=event)
+                return
