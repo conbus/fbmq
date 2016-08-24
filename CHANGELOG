@@ -4,7 +4,7 @@ FBMQ Changelog
 Latest
 ------
 
-1.5.1
+1.5.4
 -----
 
 * Support decorators (message handlers and button/quickreply callbacks)

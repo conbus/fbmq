@@ -7,8 +7,8 @@ long_description = ''
 try:
     import pypandoc
     long_description = pypandoc.convert('README.md', 'rst')
-except(IOError, ImportError):
-    long_description = open('README.md').read()
+except:
+    pass
 
 
 # Get the version
@@ -34,6 +34,4 @@ setup(name='fbmq',
       packages=['fbmq'],
       install_requires=['requests>=2.0', 'flask'],
       keywords='Facebook Messenger Platform Chatbot',
-      test_suite="tests",
-      tests_require=['coverage', 'mock']
       )
