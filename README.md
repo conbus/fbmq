@@ -32,6 +32,35 @@ def message_handler(event):
   page.send(sender_id, "thank you! your message is '%s'" % message)
 ```
 
+### handlers
+`@page.handle_message` - This callback will occur when a message has been sent to your page.
+
+`@page.handle_echo` - This callback will occur when a message has been sent by your page
+
+`@page.handle_delivery` - This callback will occur when a message a page has sent has been delivered.
+
+`@page.handle_optin` - This callback will occur when the [Send-to-Messenger](https://developers.facebook.com/docs/messenger-platform/plugin-reference/send-to-messenger) plugin has been tapped
+
+`@page.handle_postback` - Postbacks occur when a Postback button, Get Started button, Persistent menu or Structured Message is tapped.
+
+`@page.handle_read` - This callback will occur when a message a page has sent has been read by the user.
+
+`@page.handle_account_linking` - This callback will occur when the Linked Account or Unlink Account call-to-action have been tapped.
+
+#### if you don't need a decorator
+```
+@app.route('/webhook', methods=['POST'])
+def webhook():
+  page.handle_webhook(request.get_data(as_text=True),
+                      message=message_handler)
+  return "ok"
+
+def message_handler(event):
+  sender_id = event['sender']['id']
+  message = event['message']
+  
+  page.send(sender_id, "thank you! your message is '%s'" % message)
+```
 
 # Request
 
