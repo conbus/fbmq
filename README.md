@@ -5,14 +5,15 @@
 A Python Library For Using The Facebook Messenger Platform API (Python Facebook Chat & Chatbot Library)
 Facebook messenger platform api full features are supported
 
-# Install
+# 1. Install
 ```
 pip install fbmq
 ```
 
-# Handle Webhook
+# 2. Handle webhook
+how to handle messages from user to facebook page
 
-## Usage (with flask)
+### Usage (with flask)
 ```python
 from flask import Flask, request
 from fbmq import Page
@@ -62,46 +63,47 @@ def message_handler(event):
   page.send(sender_id, "thank you! your message is '%s'" % message)
 ```
 
-# Request
+# 3. Send a message
+how to send a message from facebook page to user
 
-## Basic
+### Basic
 
-#### Import
+##### Import
 ```python
 from fbmq import Attachment, Template, QuickReply, Page
 ```
 
-#### Text
+##### Text
 ```python
 page.send(recipient_id, "hello world!")
 ```
 
 
-#### Image (jpg, png, gif support)
+##### Image (jpg, png, gif support)
 ```python
 page.send(recipient_id, Attachment.Image(image_url))
 ```
 
 
-#### Audio
+##### Audio
 ```python
 page.send(recipient_id, Attachment.Audio(audio_url))
 ```
 
-#### Video
+##### Video
 ```python
 page.send(recipient_id, Attachment.Video(video_url))
 ```
 
 
-#### File
+##### File
 ```python
 page.send(recipient_id, Attachment.File(file_url))
 ```
 
 
 
-#### quick reply
+##### quick reply
 ```python
 quick_replies = [
   QuickReply(title="Action", payload="PICK_ACTION"),
@@ -128,7 +130,7 @@ def callback_picked_genre(payload, event):
 ```
 
 
-#### typing on/off
+##### typing on/off
 ```python
 page.typing_on(recipient_id)
 page.typing_off(recipient_id)
@@ -136,9 +138,9 @@ page.typing_off(recipient_id)
 
 
 
-## Templates
+### Templates
 
-#### Template : Button
+##### Template : Button
 ```python
 buttons = [
   Attachment.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
@@ -163,7 +165,7 @@ def callback_clicked_button(payload, event):
 ```
 
 
-#### Template : Generic
+##### Template : Generic
 ```python
 page.send(recipient_id, Template.Generic([
   Template.GenericElement("rift",
@@ -188,7 +190,7 @@ page.send(recipient_id, Template.Generic([
 ```
 
 
-#### Template : Receipt
+##### Template : Receipt
 ```python
     element = Template.ReceiptElement(title="Oculus Rift",
                                       subtitle="Includes: headset, sensor, remote",
@@ -225,7 +227,7 @@ page.send(recipient_id, Template.Generic([
 
 
 
-# Example
+# 4. Example
 
 1. fill example/config.py
 2. run server
