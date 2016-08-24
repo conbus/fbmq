@@ -21,8 +21,7 @@ page = fbmq.Page(PAGE_ACCESS_TOKEN)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-  payload = request.get_data(as_text=True)
-  fbmq.handle_webhook(payload)
+  page.handle_webhook(request.get_data(as_text=True))
   return "ok"
 
 @page.handle_message
