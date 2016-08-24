@@ -15,9 +15,11 @@ Facebook messenger platform api full features are supported
     * [text](#text)
     * [image](#image) / [audio](#audio) / [video](#video) / [file](#file)
     * [quick reply](#quick-reply)
+      * [quick reply callback](#quick-reply-callback)
     * [typing on/off](#typing-onoff)
   * [templates](#templates)
     * [button](#template--button)
+      * [button callback](#button-callback)
     * [generic](#template--generic)
     * [receipt](#template--receipt)
 * [Example](#example)
@@ -141,7 +143,8 @@ page.send(recipient_id,
           metadata="DEVELOPER_DEFINED_METADATA")
 ```
 
-__you can define easily a quick reply callback method.__
+##### quick reply callback
+you can define easily a quick reply callback method.
 ```python
 @page.callback_quick_reply(['PICK_ACTION', 'PICK_COMEDY'])
 def callback_picked_genre(payload, event):
@@ -176,7 +179,8 @@ buttons = [
 page.send(recipient_id, Template.Buttons("hello", buttons))
 ```
 
-__you can define easily a button postback method (it works only postback type buttons).__
+##### button callback
+you can define easily a button postback method (it works only postback type buttons).
 ```python
 @page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
 def callback_clicked_button(payload, event):
