@@ -3,6 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/l/fbmq.svg?v=1&maxAge=2592000)](https://pypi.python.org/pypi/fbmq)
 
 A Python Library For Using The Facebook Messenger Platform API (Python Facebook Chat & Chatbot Library)
+Facebook messenger platform api full features are supported
 
 # Install
 ```
