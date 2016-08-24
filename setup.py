@@ -5,27 +5,11 @@ from distutils.core import setup
 long_description = ''
 
 try:
-    import subprocess
-    import pandoc
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+except(IOError, ImportError):
+    long_description = open('README.md').read()
 
-    process = subprocess.Popen(
-        ['which pandoc'],
-        shell=True,
-        stdout=subprocess.PIPE,
-        universal_newlines=True
-    )
-
-    pandoc_path = process.communicate()[0]
-    pandoc_path = pandoc_path.strip('\n')
-
-    pandoc.core.PANDOC_PATH = pandoc_path
-
-    doc = pandoc.Document()
-    doc.markdown = open('README.md').read()
-
-    long_description = doc.rst
-except:
-    pass
 
 # Get the version
 version_regex = r'__version__ = ["\']([^"\']*)["\']'
