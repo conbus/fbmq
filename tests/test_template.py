@@ -19,18 +19,40 @@ class TemplateTest(unittest.TestCase):
         self.assertEquals('{"payload": "+82108011", "title": "title", "type": "phone_number"}', utils.to_json(btn))
         print(utils.to_json(btn))
 
+    def test_buttons(self):
+        btns1 = Template.Buttons(text="Title", buttons=[
+            {'type': 'web_url', 'title': 'title', 'value': 'https://test.com'},
+            {'type': 'postback', 'title': 'title', 'value': 'TEST_PAYLOAD'},
+            {'type': 'phone_number', 'title': 'title', 'value': '+82108011'},
+        ])
+
+        btns2 = Template.Buttons(text="Title", buttons=[
+            Template.ButtonWeb(title="title", url="https://test.com"),
+            Template.ButtonPostBack(title="title", payload="TEST_PAYLOAD"),
+            Template.ButtonPhoneNumber(title="title", payload="+82108011")
+        ])
+
+        self.assertEquals(utils.to_json(btns1), utils.to_json(btns2))
+
     def test_button_shortcut(self):
         btns = Template.Buttons.convert_shortcut_buttons([
             {'type': 'web_url', 'title': 'title', 'value': 'https://test.com'},
             {'type': 'postback', 'title': 'title', 'value': 'TEST_PAYLOAD'},
             {'type': 'phone_number', 'title': 'title', 'value': '+82108011'},
+            Template.ButtonWeb(title="title", url="https://test.com"),
         ])
         self.assertEquals('[{"title": "title", "type": "web_url", "url": "https://test.com"},'
                           ' {"payload": "TEST_PAYLOAD", "title": "title", "type": "postback"},'
-                          ' {"payload": "+82108011", "title": "title", "type": "phone_number"}]', utils.to_json(btns))
+                          ' {"payload": "+82108011", "title": "title", "type": "phone_number"},'
+                          ' {"title": "title", "type": "web_url", "url": "https://test.com"}]', utils.to_json(btns))
 
         with self.assertRaises(ValueError) as context:
             Template.Buttons.convert_shortcut_buttons([{'type': 'url', 'title': 'title', 'value': 'https://test.com'}])
+
+        with self.assertRaises(ValueError) as context:
+            Template.Buttons.convert_shortcut_buttons(['hello'])
+
+        self.assertEquals(None, Template.Buttons.convert_shortcut_buttons(None))
 
     def test_generic(self):
         generic = Template.Generic(

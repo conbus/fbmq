@@ -11,6 +11,17 @@ class PageTest(unittest.TestCase):
     def setUp(self):
         self.page = Page('TOKEN')
         self.page._send = mock.MagicMock()
+        self.page._fetch_page_info = mock.MagicMock()
+
+    def test_send(self):
+        self.page.send(12345, "hello world", quick_replies=[{'title': 'Yes', 'payload': 'YES'}])
+        self.page._send.assert_called_once_with('{"message": {"attachment": null, "metadata": null, '
+                                                '"quick_replies": '
+                                                '[{"content_type": "text", "payload": "YES", "title": "Yes"}], '
+                                                '"text": "hello world"},'
+                                                ' "notification_type": null, '
+                                                '"recipient": {"id": 12345, "phone_number": null}, '
+                                                '"sender_action": null}')
 
     def test_typingon(self):
         self.page.typing_on(1004)
@@ -30,6 +41,55 @@ class PageTest(unittest.TestCase):
                                                 '"recipient": {"id": 1004, "phone_number": null}, '
                                                 '"sender_action": "mark_seen"}')
 
+    def test_handle_webhook_errors(self):
+        payload = """
+        {
+            "object":"not_a_page",
+            "entry":[
+                {"id":"1691462197845448","time":1472026867114,
+                "messaging":[
+                    {"sender":{"id":"1134343043305865"},"recipient":{"id":"1691462197845448"},"timestamp":1472026867080,
+                     "message":{"mid":"mid.1472026867074:cfb5e1d4bde07a2a55","seq":812,"text":"hello world"}}
+                ]}
+            ]
+        }
+        """
+        self.assertFalse(self.page.handle_webhook(payload))
+
+        payload = """
+        {
+            "object":"page",
+            "entry":[
+                {"id":"1691462197845448","time":1472026867114,
+                "messaging":[
+                    {"sender":{"id":"1134343043305865"},"recipient":{"id":"1691462197845448"},"timestamp":1472026867080,
+                     "unknown":{"mid":"mid.1472026867074:cfb5e1d4bde07a2a55","seq":812,"text":"hello world"}}
+                ]}
+            ]
+        }
+        """
+
+        self.page.handle_webhook(payload)
+
+        @self.page.callback_quick_reply
+        @self.page.callback_button
+        def unknown():
+            pass
+
+    def test_page_info(self):
+        self.assertEquals(0, self.page._fetch_page_info.call_count)
+        self.page.page_id
+        self.assertEquals(1, self.page._fetch_page_info.call_count)
+        self.page.page_name
+        self.assertEquals(2, self.page._fetch_page_info.call_count)
+
+        self.page._page_id = 1
+        self.page._page_name = 'name'
+        print(self.page.page_id, self.page.page_name)
+
+        self.assertEquals(2, self.page._fetch_page_info.call_count)
+
+
     def test_handle_webhook_message(self):
         payload = """
         {
@@ -44,6 +104,7 @@ class PageTest(unittest.TestCase):
         }
         """
         counter = mock.MagicMock()
+        self.page.handle_webhook(payload)
 
         @self.page.handle_message
         def handler1(event):
