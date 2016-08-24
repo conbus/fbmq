@@ -15,26 +15,21 @@ pip install fbmq
 ## Usage (with flask)
 ```
 from flask import Flask, request
-import fbmq
+from fbmq import Page
+
+page = fbmq.Page(PAGE_ACCESS_TOKEN)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
   payload = request.get_data(as_text=True)
-  fbmq.handle_webhook(payload,
-                      optin=optin_handler,
-                      message=message_handler,
-                      echo=echo_handler,
-                      delivery=delivery_handler,
-                      postback=postback_handler,
-                      read=read_handler,
-                      account_linking=account_linking_handler)
+  fbmq.handle_webhook(payload)
   return "ok"
 
+@page.handle_message
 def message_handler(event):
   sender_id = event['sender']['id']
   message = event['message']
   
-  page = fbmq.Page(PAGE_ACCESS_TOKEN)  
   page.send(sender_id, "thank you! your message is '%s'" % message)
 ```
 
@@ -100,6 +95,12 @@ quick_replies = [{'title': 'Action', 'payload': 'PICK_ACTION'},
                 {'title': 'Comedy', 'payload': 'PICK_COMEDY'}}
 ```
 
+you can define quick reply callback method easily.
+```
+@page.callback_quick_reply(['PICK_ACTION', 'PICK_COMEDY'])
+def callback_picked_genre(payload, event):
+  print(payload, event)
+```
 
 
 #### typing on/off
@@ -126,6 +127,12 @@ you can use dict instead of Button class
 buttons = [{'type': 'web_url', 'title': 'Open Web URL', 'value': 'https://www.oculus.com/en-us/rift/'},
           {'type': 'postback', 'title': 'trigger Postback', 'value': 'DEVELOPED_DEFINED_PAYLOAD'},
           {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'}]
+```
+you can define button postback method easily (it works only postback type buttons).
+```
+@page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
+def callback_clicked_button(payload, event):
+  print(payload, event)
 ```
 
 
