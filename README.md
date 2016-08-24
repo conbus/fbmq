@@ -151,6 +151,9 @@ you can define easily a quick reply callback method.
 @page.callback_quick_reply(['PICK_ACTION', 'PICK_COMEDY'])
 def callback_picked_genre(payload, event):
   print(payload, event)
+  
+# Also supported regex, it works corretly
+# @page.callback_quick_reply(['PICK_(.+)'])
 ```
 
 
@@ -187,6 +190,9 @@ you can define easily a button postback method (it works only postback type butt
 @page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
 def callback_clicked_button(payload, event):
   print(payload, event)
+  
+# Also supported regex, it works corretly
+# @page.callback_button(['DEVELOPED_DEFINE(.+)'])
 ```
 
 
