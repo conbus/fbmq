@@ -1,16 +1,34 @@
 # FBMQ (Facebook Messenger Platform Python Library)
-[![PyPI](https://img.shields.io/pypi/v/fbmq.svg?v=1&maxAge=3600)](https://pypi.python.org/pypi/fbmq)
+[![PyPI](https://img.shields.io/pypi/v/fbmq.svg?v=2&maxAge=3600)](https://pypi.python.org/pypi/fbmq)
 [![PyPI](https://img.shields.io/pypi/l/fbmq.svg?v=1&maxAge=2592000)](https://pypi.python.org/pypi/fbmq)
 
 A Python Library For Using The Facebook Messenger Platform API (Python Facebook Chat & Chatbot Library)
 Facebook messenger platform api full features are supported
+## Table of Contents
 
-# 1. Install
+* [Install](#install)
+* [Handle webhook](#handle-webhook)
+  * [usage (with flask)](#usage-with-flask)
+  * [handlers](#handlers)
+* [Send a message](#send-a-message)
+  * [basic](#basic)
+    * [text](#text)
+    * [image](#image) / [audio](#audio) / [video](#video) / [file](#file)
+    * [quick reply](#quick-reply)
+    * [typing on/off](#typing-onoff)
+  * [templates](#templates)
+    * [button](#template--button)
+    * [generic](#template--generic)
+    * [receipt](#template--receipt)
+* [Example](#example)
+
+
+# Install
 ```
 pip install fbmq
 ```
 
-# 2. Handle webhook
+# Handle webhook
 how to handle messages from user to facebook page
 
 ### Usage (with flask)
@@ -63,7 +81,7 @@ def message_handler(event):
   page.send(sender_id, "thank you! your message is '%s'" % message)
 ```
 
-# 3. Send a message
+# Send a message
 how to send a message from facebook page to user
 
 ### Basic
@@ -79,7 +97,8 @@ page.send(recipient_id, "hello world!")
 ```
 
 
-##### Image (jpg, png, gif support)
+##### Image
+jpg, png, gif support
 ```python
 page.send(recipient_id, Attachment.Image(image_url))
 ```
@@ -227,7 +246,7 @@ page.send(recipient_id, Template.Generic([
 
 
 
-# 4. Example
+# Example
 
 1. fill example/config.py
 2. run server
