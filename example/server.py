@@ -24,6 +24,7 @@ def validate():
 @app.route('/webhook', methods=['POST'])
 def webhook():
     payload = request.get_data(as_text=True)
+    print(payload)
     page.handle_webhook(payload)
 
     return "ok"

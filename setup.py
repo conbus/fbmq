@@ -34,4 +34,6 @@ setup(name='fbmq',
       packages=['fbmq'],
       install_requires=['requests>=2.0', 'flask'],
       keywords='Facebook Messenger Platform Chatbot',
+      test_suite="tests",
+      tests_require=['coverage', 'mock']
       )

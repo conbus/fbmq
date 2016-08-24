@@ -1,24 +1,25 @@
 import json
 import requests
 
+from .payload import *
+
 
 class Page(object):
     def __init__(self, page_access_token):
         self.page_access_token = page_access_token
 
-
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
     # these are only set by decorators
-    webhook_handlers = {}
+    _webhook_handlers = {}
 
-    quick_reply_callbacks = {}
-    button_callbacks = {}
+    _quick_reply_callbacks = {}
+    _button_callbacks = {}
 
     def _call_handler(self, name, func, *args, **kwargs):
         if func is not None:
             func(*args, **kwargs)
-        elif name in self.webhook_handlers:
-            self.webhook_handlers[name](*args, **kwargs)
+        elif name in self._webhook_handlers:
+            self._webhook_handlers[name](*args, **kwargs)
         else:
             print("there's no %s handler" % name)
 
@@ -49,7 +50,7 @@ class Page(object):
                 elif 'postback' in event:
                     if self.has_postback_callback(event):
                         self.call_postback_callback(event)
-                    else:    
+                    else:
                         self._call_handler('postback', postback, event)
                 elif 'read' in event:
                     self._call_handler('read', read, event)
@@ -57,7 +58,6 @@ class Page(object):
                     self._call_handler('account_linking', account_linking, event)
                 else:
                     print("Webhook received unknown messagingEvent:", event)
-
 
     _page_id = None
     _page_name = None
@@ -133,32 +133,37 @@ class Page(object):
     """
     decorations
     """
+
     def handle_optin(self, func):
-        self.webhook_handlers['optin'] = func
+        self._webhook_handlers['optin'] = func
 
     def handle_message(self, func):
-        self.webhook_handlers['message'] = func
+        self._webhook_handlers['message'] = func
 
     def handle_echo(self, func):
-        self.webhook_handlers['echo'] = func
+        self._webhook_handlers['echo'] = func
 
     def handle_delivery(self, func):
-        self.webhook_handlers['delivery'] = func
+        self._webhook_handlers['delivery'] = func
 
     def handle_postback(self, func):
-        self.webhook_handlers['postback'] = func
+        self._webhook_handlers['postback'] = func
 
     def handle_read(self, func):
-        self.webhook_handlers['read'] = func
+        self._webhook_handlers['read'] = func
 
     def handle_account_linking(self, func):
-        self.webhook_handlers['account_linking'] = func
+        self._webhook_handlers['account_linking'] = func
 
-    def callback_quick_reply(self, payloads=[]):
+    def callback_quick_reply(self, payloads=None):
         def wrapper(func):
+            if payloads is None:
+                return func
+
             for payload in payloads:
-                self.quick_reply_callbacks[payload] = func
+                self._quick_reply_callbacks[payload] = func
             return func
+
         return wrapper
 
     @staticmethod
@@ -167,80 +172,29 @@ class Page(object):
 
     def has_quick_reply_callback(self, event):
         payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
-        return payload in self.quick_reply_callbacks
+        return payload in self._quick_reply_callbacks
 
     def call_quick_reply_callback(self, event):
         payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
-        if payload in self.quick_reply_callbacks:
-            self.quick_reply_callbacks[payload](payload, event=event)
+        if payload in self._quick_reply_callbacks:
+            self._quick_reply_callbacks[payload](payload, event=event)
 
-    def callback_button(self, payloads=[]):
+    def callback_button(self, payloads=None):
         def wrapper(func):
+            if payloads is None:
+                return func
+
             for payload in payloads:
-                self.button_callbacks[payload] = func
+                self._button_callbacks[payload] = func
             return func
+
         return wrapper
 
     def has_postback_callback(self, event):
         payload = event.get("postback", {}).get("payload", '')
-        return payload in self.button_callbacks
+        return payload in self._button_callbacks
 
     def call_postback_callback(self, event):
         payload = event.get("postback", {}).get("payload", '')
-        if payload in self.button_callbacks:
-            self.button_callbacks[payload](payload, event=event)
-
-
-class Payload(object):
-    def __init__(self, recipient, message=None, sender_action=None, notification_type=None):
-        self.recipient = recipient
-        self.message = message
-        self.sender_action = sender_action
-        self.notification_type = notification_type
-
-    def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
-
-
-class Recipient(object):
-    def __init__(self, id=None, phone_number=None):
-        self.id = id
-        self.phone_number = phone_number
-
-
-class Message(object):
-    """
-    https://developers.facebook.com/docs/messenger-platform/send-api-reference#message
-    Message object can contain text, attachment, quick_replies and metadata properties
-    """
-
-    def __init__(self, text=None, attachment=None, quick_replies=None, metadata=None):
-        self.text = text
-        self.attachment = attachment
-        self.quick_replies = Message.convert_shortcut_quick_reply(quick_replies)
-        self.metadata = metadata
-
-    @staticmethod
-    def convert_shortcut_quick_reply(items):
-        """
-        support shortcut [{'title':'title', 'payload':'payload'}]
-        """
-        if items is not None and isinstance(items, list):
-            result = []
-            for item in items:
-                if isinstance(item, QuickReply):
-                    result.append(item)
-                elif isinstance(item, dict):
-                    result.append(QuickReply(title=item.get('title'), payload=item.get('payload')))
-                else:
-                    raise ValueError('Invalid quick_replies variables')
-            return result
-        else:
-            return items
-
-
-class QuickReply(object):
-    def __init__(self, title, payload):
-        self.title = title
-        self.payload = payload
-        self.content_type = 'text'
+        if payload in self._button_callbacks:
+            self._button_callbacks[payload](payload, event=event)
