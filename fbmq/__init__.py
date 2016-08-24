@@ -1,5 +1,5 @@
-__version__ = '1.4.0'
+__version__ = '1.5.0'
 
-from .fbmq import QuickReply, Page, handle_webhook
+from .fbmq import QuickReply, Page
 from . import attachment as Attachment
 from . import template as Template

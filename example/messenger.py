@@ -1,23 +1,12 @@
 import json
 from config import CONFIG
-from fbmq import Attachment, Template, QuickReply, Page
+from fbmq import Attachment, Template, QuickReply
+from fbpage import page
 
 USER_SEQ = {}
-fbpage = Page(CONFIG['FACEBOOK_TOKEN'])
 
 
-def messaging_events(payload):
-    data = json.loads(payload)
-
-    # Make sure this is a page subscription
-    if data.get("object") == "page":
-        # Iterate over each entry
-        # There may be multiple if batched
-        for entry in data.get("entry"):
-            for event in entry.get("messaging"):
-                yield event
-
-
+@page.handle_optin
 def received_authentication(event):
     sender_id = event.get("sender", {}).get("id")
     recipient_id = event.get("recipient", {}).get("id")
@@ -28,18 +17,20 @@ def received_authentication(event):
     print("Received authentication for user %s and page %s with pass "
           "through param '%s' at %s" % (sender_id, recipient_id, pass_through_param, time_of_auth))
 
-    fbpage.send(sender_id, "Authentication successful")
+    page.send(sender_id, "Authentication successful")
 
 
+@page.handle_echo
 def received_echo(event):
     message = event.get("message", {})
     message_id = message.get("mid")
     app_id = message.get("app_id")
     metadata = message.get("metadata")
-    print("page id : %s , %s" % (fbpage.page_id, fbpage.page_name))
+    print("page id : %s , %s" % (page.page_id, page.page_name))
     print("Received echo for message %s and app %s with metadata %s" % (message_id, app_id, metadata))
 
 
+@page.handle_message
 def received_message(event):
     sender_id = event.get("sender", {}).get("id")
     recipient_id = event.get("recipient", {}).get("id")
@@ -69,14 +60,15 @@ def received_message(event):
         quick_reply_payload = quick_reply.get('payload')
         print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
-        fbpage.send(sender_id, "Quick reply tapped")
+        page.send(sender_id, "Quick reply tapped")
 
     if message_text:
         send_message(sender_id, message_text)
     elif message_attachments:
-        fbpage.send(sender_id, "Message with attachment received")
+        page.send(sender_id, "Message with attachment received")
 
 
+@page.handle_delivery
 def received_delivery_confirmation(event):
     delivery = event.get("delivery", {})
     message_ids = delivery.get("mids")
@@ -89,6 +81,7 @@ def received_delivery_confirmation(event):
     print("All message before %s were delivered." % watermark)
 
 
+@page.handle_postback
 def received_postback(event):
     sender_id = event.get("sender", {}).get("id")
     recipient_id = event.get("recipient", {}).get("id")
@@ -99,9 +92,10 @@ def received_postback(event):
     print("Received postback for user %s and page %s with payload '%s' at %s"
           % (sender_id, recipient_id, payload, time_of_postback))
 
-    fbpage.send(sender_id, "Postback called")
+    page.send(sender_id, "Postback called")
 
 
+@page.handle_read
 def received_message_read(event):
     watermark = event.get("read", {}).get("watermark")
     seq = event.get("read", {}).get("seq")
@@ -109,6 +103,7 @@ def received_message_read(event):
     print("Received message read event for watermark %s and sequence number %s" % (watermark, seq))
 
 
+@page.handle_account_linking
 def received_account_link(event):
     sender_id = event.get("sender", {}).get("id")
     status = event.get("account_linking", {}).get("status")
@@ -141,47 +136,52 @@ def send_message(recipient_id, text):
     if text in special_keywords:
         special_keywords[text](recipient_id)
     else:
-        fbpage.send(recipient_id, text)
+        page.send(recipient_id, text)
 
 
 def send_image(recipient):
-    fbpage.send(recipient, Attachment.Image(CONFIG['SERVER_URL'] + "/assets/rift.png"))
+    page.send(recipient, Attachment.Image(CONFIG['SERVER_URL'] + "/assets/rift.png"))
 
 
 def send_gif(recipient):
-    fbpage.send(recipient, Attachment.Image(CONFIG['SERVER_URL'] + "/assets/instagram_logo.gif"))
+    page.send(recipient, Attachment.Image(CONFIG['SERVER_URL'] + "/assets/instagram_logo.gif"))
 
 
 def send_audio(recipient):
-    fbpage.send(recipient, Attachment.Audio(CONFIG['SERVER_URL'] + "/assets/sample.mp3"))
+    page.send(recipient, Attachment.Audio(CONFIG['SERVER_URL'] + "/assets/sample.mp3"))
 
 
 def send_video(recipient):
-    fbpage.send(recipient, Attachment.Video(CONFIG['SERVER_URL'] + "/assets/allofus480.mov"))
+    page.send(recipient, Attachment.Video(CONFIG['SERVER_URL'] + "/assets/allofus480.mov"))
 
 
 def send_file(recipient):
-    fbpage.send(recipient, Attachment.File(CONFIG['SERVER_URL'] + "/assets/test.txt"))
+    page.send(recipient, Attachment.File(CONFIG['SERVER_URL'] + "/assets/test.txt"))
 
 
 def send_button(recipient):
     """
     Shortcuts are supported
-    fbpage.send(recipient, Template.Buttons("hello", [
+    page.send(recipient, Template.Buttons("hello", [
         {'type': 'web_url', 'title': 'Open Web URL', 'value': 'https://www.oculus.com/en-us/rift/'},
         {'type': 'postback', 'title': 'tigger Postback', 'value': 'DEVELOPED_DEFINED_PAYLOAD'},
         {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'},
     ]))
     """
-    fbpage.send(recipient, Template.Buttons("hello", [
+    page.send(recipient, Template.Buttons("hello", [
         Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
-        Template.ButtonPostBack("tigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
+        Template.ButtonPostBack("trigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
         Template.ButtonPhoneNumber("Call Phone Number", "+16505551234")
     ]))
 
 
+@page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
+def callback_clicked_button(payload, event):
+    print(payload, event)
+
+
 def send_generic(recipient):
-    fbpage.send(recipient, Template.Generic([
+    page.send(recipient, Template.Generic([
         Template.GenericElement("rift",
                                 subtitle="Next-generation virtual reality",
                                 item_url="https://www.oculus.com/en-us/rift/",
@@ -229,48 +229,53 @@ def send_receipt(recipient):
 
     adjustment = Template.ReceiptAdjustment(name="New Customer Discount", amount=-50)
 
-    fbpage.send(recipient, Template.Receipt(recipient_name='Peter Chang',
-                                            order_number=receipt_id,
-                                            currency='USD',
-                                            payment_method='Visa 1234',
-                                            timestamp="1428444852",
-                                            elements=[element],
-                                            address=address,
-                                            summary=summary,
-                                            adjustments=[adjustment]))
+    page.send(recipient, Template.Receipt(recipient_name='Peter Chang',
+                                          order_number=receipt_id,
+                                          currency='USD',
+                                          payment_method='Visa 1234',
+                                          timestamp="1428444852",
+                                          elements=[element],
+                                          address=address,
+                                          summary=summary,
+                                          adjustments=[adjustment]))
 
 
 def send_quick_reply(recipient):
     """
     shortcuts are supported
-    fbpage.send(recipient, "What's your favorite movie genre?",
+    page.send(recipient, "What's your favorite movie genre?",
                 quick_replies=[{'title': 'Action', 'payload': 'PICK_ACTION'},
                                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}, ],
                 metadata="DEVELOPER_DEFINED_METADATA")
     """
-    fbpage.send(recipient, "What's your favorite movie genre?",
-                quick_replies=[QuickReply(title="Action", payload="PICK_ACTION"),
-                               QuickReply(title="Comedy", payload="PICK_COMEDY")],
-                metadata="DEVELOPER_DEFINED_METADATA")
+    page.send(recipient, "What's your favorite movie genre?",
+              quick_replies=[QuickReply(title="Action", payload="PICK_ACTION"),
+                             QuickReply(title="Comedy", payload="PICK_COMEDY")],
+              metadata="DEVELOPER_DEFINED_METADATA")
+
+
+@page.callback_quick_reply(['PICK_ACTION'])
+def callback_picked_genre(payload, event):
+    print(payload, event)
 
 
 def send_read_receipt(recipient):
-    fbpage.mark_seen(recipient)
+    page.mark_seen(recipient)
 
 
 def send_typing_on(recipient):
-    fbpage.typing_on(recipient)
+    page.typing_on(recipient)
 
 
 def send_typing_off(recipient):
-    fbpage.typing_off(recipient)
+    page.typing_off(recipient)
 
 
 def send_account_linking(recipient):
-    fbpage.send(recipient, Template.AccountLink(text="Welcome. Link your account.",
-                                                account_link_url=CONFIG['SERVER_URL'] + "/authorize",
-                                                account_unlink_button=True))
+    page.send(recipient, Template.AccountLink(text="Welcome. Link your account.",
+                                              account_link_url=CONFIG['SERVER_URL'] + "/authorize",
+                                              account_unlink_button=True))
 
 
 def send_text_message(recipient, text):
-    fbpage.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")
+    page.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")

@@ -4,7 +4,7 @@ from flask import Flask, request, send_from_directory, render_template
 
 import messenger
 from config import CONFIG
-import fbmq
+from fbpage import page
 
 app = Flask(__name__)
 
@@ -23,16 +23,8 @@ def validate():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-
     payload = request.get_data(as_text=True)
-    fbmq.handle_webhook(payload,
-                        optin=messenger.received_authentication,
-                        message=messenger.received_message,
-                        echo=messenger.received_echo,
-                        delivery=messenger.received_delivery_confirmation,
-                        postback=messenger.received_postback,
-                        read=messenger.received_message_read,
-                        account_linking=messenger.received_account_link)
+    page.handle_webhook(payload)
 
     return "ok"
 

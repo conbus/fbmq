@@ -2,48 +2,62 @@ import json
 import requests
 
 
-def _call_function(name, func, *args, **kwargs):
-    if func is None:
-        print("there's no %s handler" % name)
-    else:
-        func(*args, **kwargs)
-
-
-def handle_webhook(payload, optin=None, message=None, echo=None, delivery=None,
-                   postback=None, read=None, account_linking=None):
-    data = json.loads(payload)
-
-    # Make sure this is a page subscription
-    if data.get("object") != "page":
-        print("Webhook failed, only support page subscription")
-        return
-
-    # Iterate over each entry
-    # There may be multiple if batched
-    for entry in data.get("entry"):
-        for event in entry.get("messaging"):
-            if 'optin' in event:
-                _call_function('optin', optin, event)
-            elif 'message' in event:
-                if event.get("message", {}).get("is_echo"):
-                    _call_function('echo', echo, event)
-                else:
-                    _call_function('message', message, event)
-            elif 'delivery' in event:
-                _call_function('delivery', delivery, event)
-            elif 'postback' in event:
-                _call_function('postback', postback, event)
-            elif 'read' in event:
-                _call_function('read', read, event)
-            elif 'account_linking' in event:
-                _call_function('account_linking', account_linking, event)
-            else:
-                print("Webhook received unknown messagingEvent:", event)
-
-
 class Page(object):
     def __init__(self, page_access_token):
         self.page_access_token = page_access_token
+
+
+    # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
+    # these are only set by decorators
+    webhook_handlers = {}
+
+    quick_reply_callbacks = {}
+    button_callbacks = {}
+
+    def _call_handler(self, name, func, *args, **kwargs):
+        if func is not None:
+            func(*args, **kwargs)
+        elif name in self.webhook_handlers:
+            self.webhook_handlers[name](*args, **kwargs)
+        else:
+            print("there's no %s handler" % name)
+
+    def handle_webhook(self, payload, optin=None, message=None, echo=None, delivery=None,
+                       postback=None, read=None, account_linking=None):
+        data = json.loads(payload)
+
+        # Make sure this is a page subscription
+        if data.get("object") != "page":
+            print("Webhook failed, only support page subscription")
+            return
+
+        # Iterate over each entry
+        # There may be multiple if batched
+        for entry in data.get("entry"):
+            for event in entry.get("messaging"):
+                if 'optin' in event:
+                    self._call_handler('optin', optin, event)
+                elif 'message' in event:
+                    if event.get("message", {}).get("is_echo"):
+                        self._call_handler('echo', echo, event)
+                    elif self.is_quick_reply(event) and self.has_quick_reply_callback(event):
+                        self.call_quick_reply_callback(event)
+                    else:
+                        self._call_handler('message', message, event)
+                elif 'delivery' in event:
+                    self._call_handler('delivery', delivery, event)
+                elif 'postback' in event:
+                    if self.has_postback_callback(event):
+                        self.call_postback_callback(event)
+                    else:    
+                        self._call_handler('postback', postback, event)
+                elif 'read' in event:
+                    self._call_handler('read', read, event)
+                elif 'account_linking' in event:
+                    self._call_handler('account_linking', account_linking, event)
+                else:
+                    print("Webhook received unknown messagingEvent:", event)
+
 
     _page_id = None
     _page_name = None
@@ -115,6 +129,66 @@ class Page(object):
                           sender_action='mark_seen')
 
         self._send(payload)
+
+    """
+    decorations
+    """
+    def handle_optin(self, func):
+        self.webhook_handlers['optin'] = func
+
+    def handle_message(self, func):
+        self.webhook_handlers['message'] = func
+
+    def handle_echo(self, func):
+        self.webhook_handlers['echo'] = func
+
+    def handle_delivery(self, func):
+        self.webhook_handlers['delivery'] = func
+
+    def handle_postback(self, func):
+        self.webhook_handlers['postback'] = func
+
+    def handle_read(self, func):
+        self.webhook_handlers['read'] = func
+
+    def handle_account_linking(self, func):
+        self.webhook_handlers['account_linking'] = func
+
+    def callback_quick_reply(self, payloads=[]):
+        def wrapper(func):
+            for payload in payloads:
+                self.quick_reply_callbacks[payload] = func
+            return func
+        return wrapper
+
+    @staticmethod
+    def is_quick_reply(event):
+        return event.get("message", {}).get("quick_reply", None) is not None
+
+    def has_quick_reply_callback(self, event):
+        payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
+        return payload in self.quick_reply_callbacks
+
+    def call_quick_reply_callback(self, event):
+        payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
+        if payload in self.quick_reply_callbacks:
+            self.quick_reply_callbacks[payload](payload, event=event)
+
+    def callback_button(self, payloads=[]):
+        def wrapper(func):
+            for payload in payloads:
+                self.button_callbacks[payload] = func
+            return func
+        return wrapper
+
+    def has_postback_callback(self, event):
+        payload = event.get("postback", {}).get("payload", '')
+        return payload in self.button_callbacks
+
+    def call_postback_callback(self, event):
+        payload = event.get("postback", {}).get("payload", '')
+        if payload in self.button_callbacks:
+            self.button_callbacks[payload](payload, event=event)
 
 
 class Payload(object):
