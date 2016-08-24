@@ -64,15 +64,12 @@ def message_handler(event):
 
 # Request
 
-## Setting
+## Basic
 
+#### Import
 ```
 from fbmq import Attachment, Template, QuickReply, Page
-
-page = Page(PAGE_ACCESS_TOKEN)
 ```
-
-## Basic
 
 #### Text
 ```
