@@ -20,7 +20,6 @@ class Payload(object):
         return utils.to_json(other) == self.to_json()
 
 
-
 class Recipient(object):
     def __init__(self, id=None, phone_number=None):
         self.id = id

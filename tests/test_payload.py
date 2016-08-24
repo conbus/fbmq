@@ -38,9 +38,10 @@ class PayloadTest(unittest.TestCase):
 
         p = Payload.Payload(recipient=recipient,
                             message=message,
-                            sender_action='typing_off')
+                            sender_action='typing_off',
+                            notification_type='REGULAR')
         self.assertEquals(
             '{"message": {"attachment": null, "metadata": "METADATA", "quick_replies": '
             '[{"content_type": "text", "payload": "PICK_YES", "title": "Yes"}], "text": "hello"},'
-            ' "notification_type": null, "recipient": {"id": 123456, "phone_number": "+8210"},'
+            ' "notification_type": "REGULAR", "recipient": {"id": 123456, "phone_number": "+8210"},'
             ' "sender_action": "typing_off"}', utils.to_json(p))

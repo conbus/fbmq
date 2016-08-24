@@ -1,6 +1,6 @@
 import unittest
 import json
-from unittest import mock
+import mock
 from fbmq.fbmq import Page
 from fbmq import payload as Payload
 from fbmq import attachment as Attachment

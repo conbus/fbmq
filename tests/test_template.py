@@ -43,3 +43,53 @@ class TemplateTest(unittest.TestCase):
             '{"payload": {"elements": [{"buttons": [{"title": "title", "type": "web_url", "url": "https://test.com"}],'
             ' "image_url": "https://test.com/img", "item_url": "https://test.com", "subtitle": "subtitle",'
             ' "title": "generic"}], "template_type": "generic"}, "type": "template"}', utils.to_json(generic))
+
+    def test_account_link(self):
+        link = Template.AccountLink(text="title", account_link_url="http://test.com", account_unlink_button=True)
+        self.assertEquals('{"payload": {"buttons": [{"type": "account_link", "url": "http://test.com"}, '
+                          '{"type": "account_unlink"}], "template_type": "button", "text": "title"}, '
+                          '"type": "template"}', utils.to_json(link))
+
+    def test_receipt_template(self):
+        receipt_id = "order1357"
+        element = Template.ReceiptElement(title="Oculus Rift",
+                                          subtitle="Includes: headset, sensor, remote",
+                                          quantity=1,
+                                          price=599.00,
+                                          currency="USD",
+                                          image_url="/assets/riftsq.png"
+                                          )
+
+        address = Template.ReceiptAddress(street_1="1 Hacker Way",
+                                          street_2="",
+                                          city="Menlo Park",
+                                          postal_code="94025",
+                                          state="CA",
+                                          country="US")
+
+        summary = Template.ReceiptSummary(subtotal=698.99,
+                                          shipping_cost=20.00,
+                                          total_tax=57.67,
+                                          total_cost=626.66)
+
+        adjustment = Template.ReceiptAdjustment(name="New Customer Discount", amount=-50)
+
+        receipt = Template.Receipt(recipient_name='Peter Chang',
+                                   order_number=receipt_id,
+                                   currency='USD',
+                                   payment_method='Visa 1234',
+                                   timestamp="1428444852",
+                                   elements=[element],
+                                   address=address,
+                                   summary=summary,
+                                   adjustments=[adjustment])
+
+        self.assertEquals('{"payload": {"address": {"city": "Menlo Park", "country": "US", '
+                          '"postal_code": "94025", "state": "CA", "street_1": "1 Hacker Way", "street_2": ""}, '
+                          '"adjustments": [{"amount": -50, "name": "New Customer Discount"}], "currency": "USD", '
+                          '"elements": [{"currency": "USD", "image_url": "/assets/riftsq.png", "price": 599.0, '
+                          '"quantity": 1, "subtitle": "Includes: headset, sensor, remote", "title": "Oculus Rift"}], '
+                          '"order_number": "order1357", "payment_method": "Visa 1234", "recipient_name": '
+                          '"Peter Chang", "summary": {"shipping_cost": 20.0, "subtotal": 698.99, "total_cost": 626.66, '
+                          '"total_tax": 57.67}, "template_type": "receipt", "timestamp": "1428444852"}, '
+                          '"type": "template"}', utils.to_json(receipt))
