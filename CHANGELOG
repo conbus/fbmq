@@ -9,7 +9,7 @@ Latest
 
 * Fix, trigger message_handler, postback_handler even if custom callbacks are used
 * Feature : Add a callback function in page.send
-* Feature : Add a page option 'after_send'
+* Feature : Add a page option 'after_send' (support decorator @page.after_send)
 
 1.6.0
 -----

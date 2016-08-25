@@ -8,7 +8,7 @@ from .payload import *
 class Page(object):
     def __init__(self, page_access_token, **options):
         self.page_access_token = page_access_token
-        self.after_send = options.pop('after_send', None)
+        self._after_send = options.pop('after_send', None)
 
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
     # these are only set by decorators
@@ -20,7 +20,7 @@ class Page(object):
     _quick_reply_callbacks_key_regex = {}
     _button_callbacks_key_regex = {}
 
-    after_send = None
+    _after_send = None
 
     def _call_handler(self, name, func, *args, **kwargs):
         if func is not None:
@@ -106,8 +106,8 @@ class Page(object):
         if r.status_code != requests.codes.ok:
             print(r.text)
 
-        if self.after_send is not None:
-            self.after_send(payload=payload, response=r)
+        if self._after_send is not None:
+            self._after_send(payload=payload, response=r)
 
         if callback is not None:
             callback(payload=payload, response=r)
@@ -166,6 +166,9 @@ class Page(object):
 
     def handle_account_linking(self, func):
         self._webhook_handlers['account_linking'] = func
+
+    def after_send(self, func):
+        self._after_send = func
 
     def callback_quick_reply(self, payloads=None):
         def wrapper(func):
