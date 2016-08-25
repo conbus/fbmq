@@ -48,9 +48,10 @@ class Page(object):
                 elif 'message' in event:
                     if event.get("message", {}).get("is_echo"):
                         self._call_handler('echo', echo, event)
-                    elif self.is_quick_reply(event) and self.has_quick_reply_callback(event):
-                        self.call_quick_reply_callback(event)
-                    self._call_handler('message', message, event)
+                    else:
+                        if self.is_quick_reply(event) and self.has_quick_reply_callback(event):
+                            self.call_quick_reply_callback(event)
+                        self._call_handler('message', message, event)
                 elif 'delivery' in event:
                     self._call_handler('delivery', delivery, event)
                 elif 'postback' in event:
