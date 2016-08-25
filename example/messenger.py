@@ -136,7 +136,11 @@ def send_message(recipient_id, text):
     if text in special_keywords:
         special_keywords[text](recipient_id)
     else:
-        page.send(recipient_id, text)
+        page.send(recipient_id, text, callback=send_text_callback)
+
+
+def send_text_callback(payload, response):
+    print("SEND CALLBACK")
 
 
 def send_image(recipient):

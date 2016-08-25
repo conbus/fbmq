@@ -97,19 +97,22 @@ class Page(object):
         self._page_id = data['id']
         self._page_name = data['name']
 
-    def _send(self, payload):
+    def _send(self, payload, callback=None):
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                           params={"access_token": self.page_access_token},
                           data=payload.to_json(),
                           headers={'Content-type': 'application/json'})
 
-        if self.after_send is not None:
-            self.after_send(payload)
-
         if r.status_code != requests.codes.ok:
             print(r.text)
 
-    def send(self, recipient_id, message, quick_replies=None, metadata=None):
+        if self.after_send is not None:
+            self.after_send(payload=payload, response=r)
+
+        if callback is not None:
+            callback(payload=payload, response=r)
+
+    def send(self, recipient_id, message, quick_replies=None, metadata=None, callback=None):
         text = message if isinstance(message, str) else None
         attachment = message if not isinstance(message, str) else None
 
@@ -119,7 +122,7 @@ class Page(object):
                                           quick_replies=quick_replies,
                                           metadata=metadata))
 
-        self._send(payload)
+        self._send(payload, callback=callback)
 
     def typing_on(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
