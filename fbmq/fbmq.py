@@ -47,15 +47,13 @@ class Page(object):
                         self._call_handler('echo', echo, event)
                     elif self.is_quick_reply(event) and self.has_quick_reply_callback(event):
                         self.call_quick_reply_callback(event)
-                    else:
-                        self._call_handler('message', message, event)
+                    self._call_handler('message', message, event)
                 elif 'delivery' in event:
                     self._call_handler('delivery', delivery, event)
                 elif 'postback' in event:
                     if self.has_postback_callback(event):
                         self.call_postback_callback(event)
-                    else:
-                        self._call_handler('postback', postback, event)
+                    self._call_handler('postback', postback, event)
                 elif 'read' in event:
                     self._call_handler('read', read, event)
                 elif 'account_linking' in event:

@@ -265,7 +265,7 @@ class PageTest(unittest.TestCase):
 
         self.page.handle_webhook(payload, postback=handler1)
 
-        self.assertEquals(0, counter1.call_count)
+        self.assertEquals(1, counter1.call_count)
         self.assertEquals(1, counter2.call_count)
 
         payload = """
@@ -276,7 +276,7 @@ class PageTest(unittest.TestCase):
         }]}
         """
         self.page.handle_webhook(payload, postback=handler1)
-        self.assertEquals(1, counter1.call_count)
+        self.assertEquals(2, counter1.call_count)
         self.assertEquals(1, counter2.call_count)
 
     def test_handle_webhook_quickreply_callback(self):
@@ -299,7 +299,7 @@ class PageTest(unittest.TestCase):
 
         self.page.handle_webhook(payload, postback=handler1)
 
-        self.assertEquals(0, counter1.call_count)
+        self.assertEquals(1, counter1.call_count)
         self.assertEquals(1, counter2.call_count)
 
         payload = """
@@ -309,7 +309,7 @@ class PageTest(unittest.TestCase):
             "message":{"quick_reply":{"payload":"PICK_COMEDY"},"mid":"mid.1472028637817:ae2763cc036a664b43","seq":834,"text":"Action"}}]}]}
         """
         self.page.handle_webhook(payload, postback=handler1)
-        self.assertEquals(1, counter1.call_count)
+        self.assertEquals(2, counter1.call_count)
         self.assertEquals(1, counter2.call_count)
 
     def test_callback_regex_pattern(self):
