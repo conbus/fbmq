@@ -53,6 +53,10 @@ def message_handler(event):
   message = event['message']
   
   page.send(sender_id, "thank you! your message is '%s'" % message)
+  
+@page.after_send
+def after_send(payload, response):
+  print("complete")
 ```
 
 ### handlers
@@ -70,8 +74,12 @@ def message_handler(event):
 
 `@page.handle_account_linking` - This callback will occur when the Linked Account or Unlink Account call-to-action have been tapped.
 
+`@page.after_send` - This callback will occur when page.send function has been called.
+
 #### if you don't need a decorator
 ```python
+page = fbmq.Page(PAGE_ACCESS_TOKEN, after_send=after_send)
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
   page.handle_webhook(request.get_data(as_text=True),
@@ -83,6 +91,9 @@ def message_handler(event):
   message = event['message']
   
   page.send(sender_id, "thank you! your message is '%s'" % message)
+  
+def after_send(payload, response):
+  print("complete")
 ```
 
 # Send a message
