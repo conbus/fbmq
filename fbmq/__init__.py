@@ -1,4 +1,4 @@
-__version__ = '1.7.0b3'
+__version__ = '1.7.0b4'
 
 from .fbmq import QuickReply, Page
 from . import attachment as Attachment
