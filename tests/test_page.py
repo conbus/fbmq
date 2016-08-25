@@ -14,14 +14,14 @@ class PageTest(unittest.TestCase):
         self.page._fetch_page_info = mock.MagicMock()
 
     def test_send(self):
-        self.page.send(12345, "hello world", quick_replies=[{'title': 'Yes', 'payload': 'YES'}])
+        self.page.send(12345, "hello world", quick_replies=[{'title': 'Yes', 'payload': 'YES'}], callback=1)
         self.page._send.assert_called_once_with('{"message": {"attachment": null, "metadata": null, '
                                                 '"quick_replies": '
                                                 '[{"content_type": "text", "payload": "YES", "title": "Yes"}], '
                                                 '"text": "hello world"},'
                                                 ' "notification_type": null, '
                                                 '"recipient": {"id": 12345, "phone_number": null}, '
-                                                '"sender_action": null}')
+                                                '"sender_action": null}', callback=1)
 
     def test_typingon(self):
         self.page.typing_on(1004)
