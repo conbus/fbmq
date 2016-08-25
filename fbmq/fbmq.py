@@ -6,8 +6,9 @@ from .payload import *
 
 
 class Page(object):
-    def __init__(self, page_access_token):
+    def __init__(self, page_access_token, **options):
         self.page_access_token = page_access_token
+        self.after_send = options.pop('after_send', None)
 
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
     # these are only set by decorators
@@ -18,6 +19,8 @@ class Page(object):
 
     _quick_reply_callbacks_key_regex = {}
     _button_callbacks_key_regex = {}
+
+    after_send = None
 
     def _call_handler(self, name, func, *args, **kwargs):
         if func is not None:
@@ -99,6 +102,10 @@ class Page(object):
                           params={"access_token": self.page_access_token},
                           data=payload.to_json(),
                           headers={'Content-type': 'application/json'})
+
+        if self.after_send is not None:
+            self.after_send(payload)
+
         if r.status_code != requests.codes.ok:
             print(r.text)
 
