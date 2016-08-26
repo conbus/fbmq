@@ -5,6 +5,19 @@ import requests
 from .payload import *
 
 
+# I agree with him : http://stackoverflow.com/a/36937/3843242
+class NotificationType:
+    REGULAR = 'REGULAR'
+    SILENT_PUSH = 'SILENT_PUSH'
+    NO_PUSH = 'NO_PUSH'
+
+
+class SenderAction:
+    TYPING_ON='typing_on'
+    TYPING_OFF='typing_off'
+    MARK_SEEN='mark_seen'
+
+
 class Page(object):
     def __init__(self, page_access_token, **options):
         self.page_access_token = page_access_token
@@ -113,7 +126,8 @@ class Page(object):
         if callback is not None:
             callback(payload=payload, response=r)
 
-    def send(self, recipient_id, message, quick_replies=None, metadata=None, callback=None):
+    def send(self, recipient_id, message, quick_replies=None, metadata=None,
+             notification_type=None, callback=None):
         text = message if isinstance(message, str) else None
         attachment = message if not isinstance(message, str) else None
 
@@ -121,25 +135,26 @@ class Page(object):
                           message=Message(text=text,
                                           attachment=attachment,
                                           quick_replies=quick_replies,
-                                          metadata=metadata))
+                                          metadata=metadata),
+                          notification_type=notification_type)
 
         self._send(payload, callback=callback)
 
     def typing_on(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
-                          sender_action='typing_on')
+                          sender_action=SenderAction.TYPING_ON)
 
         self._send(payload)
 
     def typing_off(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
-                          sender_action='typing_off')
+                          sender_action=SenderAction.TYPING_OFF)
 
         self._send(payload)
 
     def mark_seen(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
-                          sender_action='mark_seen')
+                          sender_action=SenderAction.MARK_SEEN)
 
         self._send(payload)
 
