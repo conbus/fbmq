@@ -108,6 +108,20 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_message
         def handler1(event):
+            self.assertTrue(event.is_message)
+            self.assertTrue(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472026867080)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, 'hello world')
             counter()
 
         self.page.handle_webhook(payload)
@@ -133,6 +147,20 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_read
         def handler1(event):
+            self.assertFalse(event.is_message)
+            self.assertFalse(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertTrue(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472026869186)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, None)
             counter()
 
         self.page.handle_webhook(payload)
@@ -159,6 +187,20 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_echo
         def handler1(event):
+            self.assertTrue(event.is_message)
+            self.assertTrue(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertTrue(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472026868763)
+            self.assertEquals(event.sender_id, '1691462197845448')
+            self.assertEquals(event.recipient_id, '1134343043305865')
+            self.assertEquals(event.message_text, 'hello')
             counter()
 
         self.page.handle_webhook(payload)
@@ -183,6 +225,20 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_delivery
         def handler1(event):
+            self.assertFalse(event.is_message)
+            self.assertFalse(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertTrue(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 0)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, None)
             counter()
 
         self.page.handle_webhook(payload)
@@ -207,6 +263,20 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_account_linking
         def handler1(event):
+            self.assertFalse(event.is_message)
+            self.assertFalse(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertTrue(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472028542079)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, None)
             counter()
 
         self.page.handle_webhook(payload)
@@ -232,6 +302,22 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_postback
         def handler1(event):
+            self.assertFalse(event.is_message)
+            self.assertFalse(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertTrue(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472028006107)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, None)
+            self.assertEquals(event.postback_payload, 'DEVELOPED_DEFINED_PAYLOAD')
+            self.assertEquals(event.postback_payload, event.postback.get('payload'))
             counter1()
 
         self.page.handle_webhook(payload)
@@ -257,6 +343,21 @@ class PageTest(unittest.TestCase):
         counter2 = mock.MagicMock()
 
         def handler1(event):
+            self.assertFalse(event.is_message)
+            self.assertFalse(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertTrue(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472028006107)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, None)
+            self.assertEquals(event.postback_payload, event.postback.get('payload'))
             counter1()
 
         @self.page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
@@ -291,6 +392,21 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_message
         def handler1(event):
+            self.assertTrue(event.is_message)
+            self.assertTrue(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertTrue(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertEquals(event.timestamp, 1472028637825)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, 'Action')
+            self.assertEquals(event.quick_reply_payload, event.quick_reply.get('payload'))
             counter1()
 
         @self.page.callback_quick_reply(['PICK_ACTION'])

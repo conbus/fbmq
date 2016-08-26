@@ -4,6 +4,11 @@ FBMQ Changelog
 Latest
 ------
 
+2.0.0
+-----
+
+* Feature : All of page handlers have parameter Event instead of a dict.
+
 1.7.0
 -----
 

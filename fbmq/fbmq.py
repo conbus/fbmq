@@ -18,10 +18,125 @@ class SenderAction:
     MARK_SEEN='mark_seen'
 
 
+class Event(object):
+    def __init__(self, messaging=None):
+        if messaging is None:
+            messaging = {}
+
+        self.messaging = messaging
+        self.matched_callbacks = []
+
+    @property
+    def sender_id(self):
+        return self.messaging.get("sender", {}).get("id", None)
+
+    @property
+    def recipient_id(self):
+        return self.messaging.get("recipient", {}).get("id", None)
+
+    @property
+    def timestamp(self):
+        return self.messaging.get("timestamp", None)
+
+    @property
+    def message(self):
+        return self.messaging.get("message", {})
+
+    @property
+    def message_text(self):
+        return self.message.get("text", None)
+
+    @property
+    def message_attachments(self):
+        return self.message.get("attachments", [])
+
+    @property
+    def quick_reply(self):
+        return self.messaging.get("message", {}).get("quick_reply", {})
+
+    @property
+    def postback(self):
+        return self.messaging.get("postback", {})
+
+    @property
+    def optin(self):
+        return self.messaging.get("optin", {})
+
+    @property
+    def account_linking(self):
+        return self.messaging.get("account_linking", {})
+
+    @property
+    def delivery(self):
+        return self.messaging.get("delivery", {})
+
+    @property
+    def read(self):
+        return self.messaging.get("read", {})
+
+    @property
+    def message_mid(self):
+        return self.messaging.get("message", {}).get("mid", None)
+
+    @property
+    def message_seq(self):
+        return self.messaging.get("message", {}).get("seq", None)
+
+    @property
+    def is_optin(self):
+        return 'optin' in self.messaging
+
+    @property
+    def is_message(self):
+        return 'message' in self.messaging
+
+    @property
+    def is_text_message(self):
+        return self.messaging.get("message", {}).get("text", None) is not None
+
+    @property
+    def is_attachment_message(self):
+        return self.messaging.get("message", {}).get("attachments", None) is not None
+
+    @property
+    def is_echo(self):
+        return self.messaging.get("message", {}).get("is_echo", None) is not None
+
+    @property
+    def is_delivery(self):
+        return 'delivery' in self.messaging
+
+    @property
+    def is_postback(self):
+        return 'postback' in self.messaging
+
+    @property
+    def is_read(self):
+        return 'read' in self.messaging
+
+    @property
+    def is_account_linking(self):
+        return 'account_linking' in self.messaging
+
+    @property
+    def is_quick_reply(self):
+        return self.messaging.get("message", {}).get("quick_reply", None) is not None
+
+    @property
+    def quick_reply_payload(self):
+        return self.messaging.get("message", {}).get("quick_reply", {}).get("payload", '')
+
+    @property
+    def postback_payload(self):
+        return self.messaging.get("postback", {}).get("payload", '')
+
+
 class Page(object):
     def __init__(self, page_access_token, **options):
         self.page_access_token = page_access_token
         self._after_send = options.pop('after_send', None)
+        self._page_id = None
+        self._page_name = None
 
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
     # these are only set by decorators
@@ -54,32 +169,37 @@ class Page(object):
 
         # Iterate over each entry
         # There may be multiple if batched
-        for entry in data.get("entry"):
-            for event in entry.get("messaging"):
-                if 'optin' in event:
-                    self._call_handler('optin', optin, event)
-                elif 'message' in event:
-                    if event.get("message", {}).get("is_echo"):
-                        self._call_handler('echo', echo, event)
-                    else:
-                        self._call_handler('message', message, event)
-                        if self.is_quick_reply(event) and self.has_quick_reply_callback(event):
-                            self.call_quick_reply_callback(event)
-                elif 'delivery' in event:
-                    self._call_handler('delivery', delivery, event)
-                elif 'postback' in event:
-                    self._call_handler('postback', postback, event)
-                    if self.has_postback_callback(event):
-                        self.call_postback_callback(event)
-                elif 'read' in event:
-                    self._call_handler('read', read, event)
-                elif 'account_linking' in event:
-                    self._call_handler('account_linking', account_linking, event)
-                else:
-                    print("Webhook received unknown messagingEvent:", event)
+        def get_events(data):
+            for entry in data.get("entry"):
+                for messaging in entry.get("messaging"):
+                    event = Event(messaging)
+                    yield event
 
-    _page_id = None
-    _page_name = None
+        for event in get_events(data):
+            if event.is_optin:
+                self._call_handler('optin', optin, event)
+            elif event.is_echo:
+                self._call_handler('echo', echo, event)
+            elif event.is_quick_reply:
+                event.matched_callbacks = self.get_quick_reply_callbacks(event)
+                self._call_handler('message', message, event)
+                for callback in event.matched_callbacks:
+                    callback(payload=event.quick_reply_payload, event=event)
+            elif event.is_message and not event.is_echo and not event.is_quick_reply:
+                self._call_handler('message', message, event)
+            elif event.is_delivery:
+                self._call_handler('delivery', delivery, event)
+            elif event.is_postback:
+                event.matched_callbacks = self.get_postback_callbacks(event)
+                self._call_handler('postback', postback, event)
+                for callback in event.matched_callbacks:
+                    callback(payload=event.postback_payload, event=event)
+            elif event.is_read:
+                self._call_handler('read', read, event)
+            elif event.is_account_linking:
+                self._call_handler('account_linking', account_linking, event)
+            else:
+                print("Webhook received unknown messagingEvent:", event)
 
     @property
     def page_id(self):
@@ -197,31 +317,16 @@ class Page(object):
 
         return wrapper
 
-    @staticmethod
-    def is_quick_reply(event):
-        return event.get("message", {}).get("quick_reply", None) is not None
-
-    def has_quick_reply_callback(self, event):
-        payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
+    def get_quick_reply_callbacks(self, event):
+        callbacks = []
         for key in self._quick_reply_callbacks.keys():
             if key not in self._quick_reply_callbacks_key_regex:
                 self._quick_reply_callbacks_key_regex[key] = re.compile(key + '$')
 
-            if self._quick_reply_callbacks_key_regex[key].match(payload):
-                return True
+            if self._quick_reply_callbacks_key_regex[key].match(event.quick_reply_payload):
+                callbacks.append(self._quick_reply_callbacks[key])
 
-        return False
-
-    def call_quick_reply_callback(self, event):
-        payload = event.get("message", {}).get("quick_reply", {}).get('payload', '')
-
-        for key in self._quick_reply_callbacks.keys():
-            if key not in self._quick_reply_callbacks_key_regex:
-                self._quick_reply_callbacks_key_regex[key] = re.compile(key + '$')
-
-            if self._quick_reply_callbacks_key_regex[key].match(payload):
-                self._quick_reply_callbacks[key](payload, event=event)
-                return
+        return callbacks
 
     def callback_button(self, payloads=None):
         def wrapper(func):
@@ -234,23 +339,13 @@ class Page(object):
 
         return wrapper
 
-    def has_postback_callback(self, event):
-        payload = event.get("postback", {}).get("payload", '')
+    def get_postback_callbacks(self, event):
+        callbacks = []
         for key in self._button_callbacks.keys():
             if key not in self._button_callbacks_key_regex:
                 self._button_callbacks_key_regex[key] = re.compile(key + '$')
 
-            if self._button_callbacks_key_regex[key].match(payload):
-                return True
+            if self._button_callbacks_key_regex[key].match(event.postback_payload):
+                callbacks.append(self._button_callbacks[key])
 
-        return False
-
-    def call_postback_callback(self, event):
-        payload = event.get("postback", {}).get("payload", '')
-        for key in self._button_callbacks.keys():
-            if key not in self._button_callbacks_key_regex:
-                self._button_callbacks_key_regex[key] = re.compile(key + '$')
-
-            if self._button_callbacks_key_regex[key].match(payload):
-                self._button_callbacks[key](payload, event=event)
-                return
+        return callbacks
