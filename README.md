@@ -256,7 +256,7 @@ page.send(recipient_id, Template.Generic([
 
     adjustment = Template.ReceiptAdjustment(name="New Customer Discount", amount=-50)
 
-    fbpage.send(recipient_id, Template.Receipt(recipient_name='Peter Chang',
+    page.send(recipient_id, Template.Receipt(recipient_name='Peter Chang',
                                             order_number='1234',
                                             currency='USD',
                                             payment_method='Visa 1234',
@@ -266,8 +266,24 @@ page.send(recipient_id, Template.Generic([
                                             summary=summary,
                                             adjustments=[adjustment]))
 ```
+### Options
 
+##### notification_type
+support notification_type as a option
 
+`NotificationType.REGULAR(default)`, `NotificationType.SILENT_PUSH`, `NotificationType.NO_PUSH`
+
+```
+page.send(recipient_id, 'hello', NotificationType.NO_PUSH)
+```
+##### callback
+you can set a callback function to each `page.send`
+```
+def callback(payload, response):
+  print('response : ' + response.text)
+  
+page.send(recipient_id, 'hello', callback=callback)
+```
 
 # Example
 
