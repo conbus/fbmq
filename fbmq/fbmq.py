@@ -184,7 +184,7 @@ class Page(object):
                 event.matched_callbacks = self.get_quick_reply_callbacks(event)
                 self._call_handler('message', message, event)
                 for callback in event.matched_callbacks:
-                    callback(payload=event.quick_reply_payload, event=event)
+                    callback(event.quick_reply_payload, event)
             elif event.is_message and not event.is_echo and not event.is_quick_reply:
                 self._call_handler('message', message, event)
             elif event.is_delivery:
@@ -193,7 +193,7 @@ class Page(object):
                 event.matched_callbacks = self.get_postback_callbacks(event)
                 self._call_handler('postback', postback, event)
                 for callback in event.matched_callbacks:
-                    callback(payload=event.postback_payload, event=event)
+                    callback(event.postback_payload, event)
             elif event.is_read:
                 self._call_handler('read', read, event)
             elif event.is_account_linking:
@@ -240,11 +240,11 @@ class Page(object):
         if r.status_code != requests.codes.ok:
             print(r.text)
 
-        if self._after_send is not None:
-            self._after_send(payload=payload, response=r)
-
         if callback is not None:
-            callback(payload=payload, response=r)
+            callback(payload, r)
+
+        if self._after_send is not None:
+            self._after_send(payload, r)
 
     def send(self, recipient_id, message, quick_replies=None, metadata=None,
              notification_type=None, callback=None):
