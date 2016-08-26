@@ -274,10 +274,10 @@ page.send(recipient_id, Template.Generic([
 ##### notification type
 support notification_type as a option
 
-`NotificationType.REGULAR(default)`, `NotificationType.SILENT_PUSH`, `NotificationType.NO_PUSH`
+`NotificationType.REGULAR (default)`, `NotificationType.SILENT_PUSH`, `NotificationType.NO_PUSH`
 
 ```
-page.send(recipient_id, 'hello', NotificationType.NO_PUSH)
+page.send(recipient_id, 'hello', notification_type=NotificationType.NO_PUSH)
 ```
 ##### callback
 you can set a callback function to each `page.send`
