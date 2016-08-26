@@ -24,6 +24,9 @@ Facebook messenger platform api full features are supported
       * [button callback](#button-callback)
     * [generic](#template--generic)
     * [receipt](#template--receipt)
+  * [options](#options)
+    * [notification type](#notification-type)
+    * [callback](#callback) 
 * [Example](#example)
 
 
@@ -268,7 +271,7 @@ page.send(recipient_id, Template.Generic([
 ```
 ### Options
 
-##### notification_type
+##### notification type
 support notification_type as a option
 
 `NotificationType.REGULAR(default)`, `NotificationType.SILENT_PUSH`, `NotificationType.NO_PUSH`
