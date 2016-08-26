@@ -52,7 +52,7 @@ def message_handler(event):
   sender_id = event['sender']['id']
   message = event['message']
   
-  page.send(sender_id, "thank you! your message is '%s'" % message)
+  page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
 ```
 
 ### handlers
@@ -82,7 +82,7 @@ def message_handler(event):
   sender_id = event['sender']['id']
   message = event['message']
   
-  page.send(sender_id, "thank you! your message is '%s'" % message)
+  page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
 ```
 
 # Send a message
