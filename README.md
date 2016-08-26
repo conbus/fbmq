@@ -52,10 +52,10 @@ def webhook():
 
 @page.handle_message
 def message_handler(event):
-  sender_id = event['sender']['id']
-  message = event['message']
+  sender_id = event.sender_id
+  message = event.message_text
   
-  page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
+  page.send(sender_id, "thank you! your message is '%s'" % message)
 
 @page.after_send
 def after_send(payload, response):
@@ -65,7 +65,7 @@ def after_send(payload, response):
 ### handlers
 A spec in detail - https://developers.facebook.com/docs/messenger-platform/webhook-reference
 
-`@page.handle_message` - This callback will occur when a message has been sent to your page.
+`@page.handle_message` - This callback will occur when a message has been sent to your page. (`quick reply` is also handled in here)
 
 `@page.handle_echo` - This callback will occur when a message has been sent by your page
 
@@ -81,6 +81,38 @@ A spec in detail - https://developers.facebook.com/docs/messenger-platform/webho
 
 `@page.after_send` - This callback will occur when page.send function has been called.
 
+#### Event parameter
+`event.sender_id` _str_ : message sender id, user id
+
+`event.recipient_id` _str_ : message receiver id, page id
+
+`event.timestamp` _number_ : timestamp when message is received
+
+`event.message` _dict_ : message dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received)
+
+`event.message_text` _str_ : `event.message.get('text')`
+
+`event.message_attachments` _str_ : `event.message.get('attachments')`
+
+`event.quick_reply` _dict_ : quick reply dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received)
+
+`event.quick_reply_payload` _str_ : `event.quick_reply.get('payload')
+
+`event.postback` _dict_ : postback dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received)
+
+`event.postback_payload` _str_ : `event.postback.get('payload')
+
+`event.optin` _dict_ : dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/authentication)
+
+`event.account_linking` _dict_: dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/account-linking)
+
+`event.delivery` _dict_: dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-delivered)
+
+`event.read` _dict_: dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read)
+
+
+`event.is_*` _bool_ - True if event type is valid
+
 #### if you don't need a decorator
 ```python
 page = fbmq.Page(PAGE_ACCESS_TOKEN, after_send=after_send)
@@ -92,10 +124,10 @@ def webhook():
   return "ok"
 
 def message_handler(event):
-  sender_id = event['sender']['id']
-  message = event['message']
+  sender_id = event.sender_id
+  message = event.message_text
   
-  page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
+  page.send(sender_id, "thank you! your message is '%s'" % message)
 
 def after_send(payload, response):
   print("complete")
