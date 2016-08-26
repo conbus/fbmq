@@ -56,6 +56,8 @@ def message_handler(event):
 ```
 
 ### handlers
+A spec in detail - https://developers.facebook.com/docs/messenger-platform/webhook-reference
+
 `@page.handle_message` - This callback will occur when a message has been sent to your page.
 
 `@page.handle_echo` - This callback will occur when a message has been sent by your page
