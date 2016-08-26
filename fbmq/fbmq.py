@@ -5,9 +5,23 @@ import requests
 from .payload import *
 
 
+# I agree with him : http://stackoverflow.com/a/36937/3843242
+class NotificationType:
+    REGULAR = 'REGULAR'
+    SILENT_PUSH = 'SILENT_PUSH'
+    NO_PUSH = 'NO_PUSH'
+
+
+class SenderAction:
+    TYPING_ON='typing_on'
+    TYPING_OFF='typing_off'
+    MARK_SEEN='mark_seen'
+
+
 class Page(object):
-    def __init__(self, page_access_token):
+    def __init__(self, page_access_token, **options):
         self.page_access_token = page_access_token
+        self._after_send = options.pop('after_send', None)
 
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
     # these are only set by decorators
@@ -18,6 +32,8 @@ class Page(object):
 
     _quick_reply_callbacks_key_regex = {}
     _button_callbacks_key_regex = {}
+
+    _after_send = None
 
     def _call_handler(self, name, func, *args, **kwargs):
         if func is not None:
@@ -45,17 +61,16 @@ class Page(object):
                 elif 'message' in event:
                     if event.get("message", {}).get("is_echo"):
                         self._call_handler('echo', echo, event)
-                    elif self.is_quick_reply(event) and self.has_quick_reply_callback(event):
-                        self.call_quick_reply_callback(event)
                     else:
                         self._call_handler('message', message, event)
+                        if self.is_quick_reply(event) and self.has_quick_reply_callback(event):
+                            self.call_quick_reply_callback(event)
                 elif 'delivery' in event:
                     self._call_handler('delivery', delivery, event)
                 elif 'postback' in event:
+                    self._call_handler('postback', postback, event)
                     if self.has_postback_callback(event):
                         self.call_postback_callback(event)
-                    else:
-                        self._call_handler('postback', postback, event)
                 elif 'read' in event:
                     self._call_handler('read', read, event)
                 elif 'account_linking' in event:
@@ -96,15 +111,23 @@ class Page(object):
         self._page_id = data['id']
         self._page_name = data['name']
 
-    def _send(self, payload):
+    def _send(self, payload, callback=None):
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                           params={"access_token": self.page_access_token},
                           data=payload.to_json(),
                           headers={'Content-type': 'application/json'})
+
         if r.status_code != requests.codes.ok:
             print(r.text)
 
-    def send(self, recipient_id, message, quick_replies=None, metadata=None):
+        if self._after_send is not None:
+            self._after_send(payload=payload, response=r)
+
+        if callback is not None:
+            callback(payload=payload, response=r)
+
+    def send(self, recipient_id, message, quick_replies=None, metadata=None,
+             notification_type=None, callback=None):
         text = message if isinstance(message, str) else None
         attachment = message if not isinstance(message, str) else None
 
@@ -112,25 +135,26 @@ class Page(object):
                           message=Message(text=text,
                                           attachment=attachment,
                                           quick_replies=quick_replies,
-                                          metadata=metadata))
+                                          metadata=metadata),
+                          notification_type=notification_type)
 
-        self._send(payload)
+        self._send(payload, callback=callback)
 
     def typing_on(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
-                          sender_action='typing_on')
+                          sender_action=SenderAction.TYPING_ON)
 
         self._send(payload)
 
     def typing_off(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
-                          sender_action='typing_off')
+                          sender_action=SenderAction.TYPING_OFF)
 
         self._send(payload)
 
     def mark_seen(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
-                          sender_action='mark_seen')
+                          sender_action=SenderAction.MARK_SEEN)
 
         self._send(payload)
 
@@ -158,6 +182,9 @@ class Page(object):
 
     def handle_account_linking(self, func):
         self._webhook_handlers['account_linking'] = func
+
+    def after_send(self, func):
+        self._after_send = func
 
     def callback_quick_reply(self, payloads=None):
         def wrapper(func):

@@ -24,6 +24,9 @@ Facebook messenger platform api full features are supported
       * [button callback](#button-callback)
     * [generic](#template--generic)
     * [receipt](#template--receipt)
+  * [options](#options)
+    * [notification type](#notification-type)
+    * [callback](#callback) 
 * [Example](#example)
 
 
@@ -53,6 +56,10 @@ def message_handler(event):
   message = event['message']
   
   page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
+
+@page.after_send
+def after_send(payload, response):
+  print("complete")
 ```
 
 ### handlers
@@ -72,8 +79,12 @@ A spec in detail - https://developers.facebook.com/docs/messenger-platform/webho
 
 `@page.handle_account_linking` - This callback will occur when the Linked Account or Unlink Account call-to-action have been tapped.
 
+`@page.after_send` - This callback will occur when page.send function has been called.
+
 #### if you don't need a decorator
 ```python
+page = fbmq.Page(PAGE_ACCESS_TOKEN, after_send=after_send)
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
   page.handle_webhook(request.get_data(as_text=True),
@@ -85,6 +96,9 @@ def message_handler(event):
   message = event['message']
   
   page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
+
+def after_send(payload, response):
+  print("complete")
 ```
 
 # Send a message
@@ -247,7 +261,7 @@ page.send(recipient_id, Template.Generic([
 
     adjustment = Template.ReceiptAdjustment(name="New Customer Discount", amount=-50)
 
-    fbpage.send(recipient_id, Template.Receipt(recipient_name='Peter Chang',
+    page.send(recipient_id, Template.Receipt(recipient_name='Peter Chang',
                                             order_number='1234',
                                             currency='USD',
                                             payment_method='Visa 1234',
@@ -257,8 +271,24 @@ page.send(recipient_id, Template.Generic([
                                             summary=summary,
                                             adjustments=[adjustment]))
 ```
+### Options
 
+##### notification type
+support notification_type as a option
 
+`NotificationType.REGULAR (default)`, `NotificationType.SILENT_PUSH`, `NotificationType.NO_PUSH`
+
+```
+page.send(recipient_id, 'hello', notification_type=NotificationType.NO_PUSH)
+```
+##### callback
+you can set a callback function to each `page.send`
+```
+def callback(payload, response):
+  print('response : ' + response.text)
+  
+page.send(recipient_id, 'hello', callback=callback)
+```
 
 # Example
 
