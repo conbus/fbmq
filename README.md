@@ -81,7 +81,8 @@ A spec in detail - https://developers.facebook.com/docs/messenger-platform/webho
 
 `@page.after_send` - This callback will occur when page.send function has been called.
 
-#### Event parameter
+#### Event parameter (fbmq.Event class)
+
 `event.sender_id` _str_ : message sender id, user id
 
 `event.recipient_id` _str_ : message receiver id, page id
