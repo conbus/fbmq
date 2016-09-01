@@ -1,10 +1,13 @@
 # coding: utf-8
+import os
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.sys.path.insert(0,parentdir)
 
 from flask import Flask, request, send_from_directory, render_template
 
-import messenger
-from config import CONFIG
-from fbpage import page
+import example.messenger
+from example.config import CONFIG
+from example.fbpage import page
 
 app = Flask(__name__)
 
