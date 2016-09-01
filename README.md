@@ -27,7 +27,10 @@ Facebook messenger platform api full features are supported
   * [options](#options)
     * [notification type](#notification-type)
     * [callback](#callback) 
- * [Thread settings](#thread-settings)
+* [Thread settings](#thread-settings)
+  * [greeting text](#greeting-text)
+  * [get started button](#get-started-button)
+  * [persistent menu](#persistent-menu)
 * [Example](#example)
 
 
