@@ -179,7 +179,7 @@ def send_button(recipient):
     ]))
 
 
-@page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
+@page.callback(['DEVELOPED_DEFINED_PAYLOAD'])
 def callback_clicked_button(payload, event):
     print(payload, event)
 
@@ -258,7 +258,7 @@ def send_quick_reply(recipient):
               metadata="DEVELOPER_DEFINED_METADATA")
 
 
-@page.callback_quick_reply(['PICK_ACTION'])
+@page.callback(['PICK_ACTION'])
 def callback_picked_genre(payload, event):
     print(payload, event)
 

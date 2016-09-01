@@ -13,9 +13,9 @@ class NotificationType:
 
 
 class SenderAction:
-    TYPING_ON='typing_on'
-    TYPING_OFF='typing_off'
-    MARK_SEEN='mark_seen'
+    TYPING_ON = 'typing_on'
+    TYPING_OFF = 'typing_off'
+    MARK_SEEN = 'mark_seen'
 
 
 class Event(object):
@@ -306,13 +306,29 @@ class Page(object):
     def after_send(self, func):
         self._after_send = func
 
-    def callback_quick_reply(self, payloads=None):
+    _callback_default_types = ['QUICK_REPLY', 'POSTBACK']
+
+    def callback(self, payloads=None, types=None):
+        if types is None:
+            types = self._callback_default_types
+
+        if not isinstance(types, list):
+            raise ValueError('callback types must be list')
+
+        for type in types:
+            if type not in self._callback_default_types:
+                raise ValueError('callback types must be "QUICK_REPLY" or "POSTBACK"')
+
         def wrapper(func):
             if payloads is None:
                 return func
 
             for payload in payloads:
-                self._quick_reply_callbacks[payload] = func
+                if 'QUICK_REPLY' in types:
+                    self._quick_reply_callbacks[payload] = func
+                if 'POSTBACK' in types:
+                    self._button_callbacks[payload] = func
+
             return func
 
         return wrapper
@@ -327,17 +343,6 @@ class Page(object):
                 callbacks.append(self._quick_reply_callbacks[key])
 
         return callbacks
-
-    def callback_button(self, payloads=None):
-        def wrapper(func):
-            if payloads is None:
-                return func
-
-            for payload in payloads:
-                self._button_callbacks[payload] = func
-            return func
-
-        return wrapper
 
     def get_postback_callbacks(self, event):
         callbacks = []

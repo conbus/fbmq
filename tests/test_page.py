@@ -71,8 +71,7 @@ class PageTest(unittest.TestCase):
 
         self.page.handle_webhook(payload)
 
-        @self.page.callback_quick_reply
-        @self.page.callback_button
+        @self.page.callback
         def unknown():
             pass
 
@@ -360,7 +359,7 @@ class PageTest(unittest.TestCase):
             self.assertEquals(event.postback_payload, event.postback.get('payload'))
             counter1()
 
-        @self.page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
+        @self.page.callback(['DEVELOPED_DEFINED_PAYLOAD'], types=['POSTBACK'])
         def button_callback(payload, event):
             counter2()
 
@@ -409,7 +408,7 @@ class PageTest(unittest.TestCase):
             self.assertEquals(event.quick_reply_payload, event.quick_reply.get('payload'))
             counter1()
 
-        @self.page.callback_quick_reply(['PICK_ACTION'])
+        @self.page.callback(['PICK_ACTION'], types=['QUICK_REPLY'])
         def button_callback(payload, event):
             counter2()
 
@@ -438,7 +437,7 @@ class PageTest(unittest.TestCase):
 
         counter1 = mock.MagicMock()
 
-        @self.page.callback_quick_reply(['ACTION'])
+        @self.page.callback(['ACTION'], types=['QUICK_REPLY'])
         def callback(payload, event):
             counter1()
 
@@ -446,10 +445,58 @@ class PageTest(unittest.TestCase):
 
         self.assertEquals(0, counter1.call_count)
 
-        @self.page.callback_quick_reply(['ACTION/(.+)'])
+        @self.page.callback(['ACTION/(.+)'], types=['QUICK_REPLY'])
         def callback2(payload, event):
             counter1()
 
         self.page.handle_webhook(payload)
 
         self.assertEquals(1, counter1.call_count)
+
+    def test_callback_types(self):
+        counter1 = mock.MagicMock()
+        counter2 = mock.MagicMock()
+        counter3 = mock.MagicMock()
+
+        quickreply_payload = """
+        {"object":"page","entry":[{"id":"1691462197845448","time":1472028637866,
+        "messaging":[{
+            "sender":{"id":"1134343043305865"},"recipient":{"id":"1691462197845448"},"timestamp":1472028637825,
+            "message":{"quick_reply":{"payload":"ACTION/1"},"mid":"mid.1472028637817:ae2763cc036a664b43","seq":834,"text":"Action"}}]}]}
+        """
+
+        button_payload = """
+        {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+        "messaging":[{
+            "sender":{"id":"1134343043305865"},"recipient":{"id":"1691462197845448"},"timestamp":1472028006107,
+            "postback":{"payload":"ACTION/100"}}]
+        }]}
+        """
+
+        @self.page.callback(['ACTION/(.+)'])
+        def callback(payload, event):
+            counter1()
+
+        @self.page.callback(['ACTION(.+)'], types=['QUICK_REPLY'])
+        def callback2(payload, event):
+            counter2()
+
+        @self.page.callback(['ACTIO(.+)'], types=['POSTBACK'])
+        def callback3(payload, event):
+            counter3()
+
+        self.page.handle_webhook(quickreply_payload)
+        self.assertEquals(1, counter1.call_count)
+        self.assertEquals(1, counter2.call_count)
+        self.assertEquals(0, counter3.call_count)
+        self.page.handle_webhook(button_payload)
+        self.assertEquals(2, counter1.call_count)
+        self.assertEquals(1, counter2.call_count)
+        self.assertEquals(1, counter3.call_count)
+
+        with self.assertRaises(ValueError):
+            @self.page.callback(['ACTIO(.+)'], types=['LSKDJFLKSJFD'])
+            def callback4(payload, event):
+                counter3()
+
+
