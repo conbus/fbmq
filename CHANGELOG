@@ -8,6 +8,9 @@ Latest
 -----
 
 * Feature : All of page handlers have parameter Event instead of a dict.
+* Feature : Support a thread setting
+* Deprecated : remove callback_postback, callback_quick_reply
+* Feature : Add a decorator - page.callback(['payload'], types=['QUICK_REPLY', 'POSTBACK'])
 
 1.7.0
 -----
