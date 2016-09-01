@@ -4,6 +4,7 @@ import mock
 from fbmq.fbmq import Page
 from fbmq import payload as Payload
 from fbmq import attachment as Attachment
+from fbmq import template as Template
 from fbmq import utils
 
 
@@ -11,6 +12,7 @@ class PageTest(unittest.TestCase):
     def setUp(self):
         self.page = Page('TOKEN')
         self.page._send = mock.MagicMock()
+        self.page._send_thread_settings = mock.MagicMock()
         self.page._fetch_page_info = mock.MagicMock()
 
     def test_send(self):
@@ -499,4 +501,74 @@ class PageTest(unittest.TestCase):
             def callback4(payload, event):
                 counter3()
 
+    def test_greeting(self):
+        self.page.greeting("hello")
+        self.page._send_thread_settings.assert_called_once_with(json.dumps(json.loads("""
+        {
+            "setting_type": "greeting",
+            "greeting": {
+                "text": "hello"
+            }
+        }
+        """)))
 
+        with self.assertRaises(ValueError):
+            self.page.greeting(1)
+
+    def test_starting_button(self):
+        self.page.show_starting_button("PAYLOAD")
+        self.page._send_thread_settings.assert_called_once_with(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "new_thread",
+            "call_to_actions": [{
+                "payload": "PAYLOAD"
+            }]
+        }))
+
+        self.page.hide_starting_button()
+        self.page._send_thread_settings.assert_called_with(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "new_thread"
+        }))
+
+        with self.assertRaises(ValueError):
+            self.page.show_starting_button(1)
+
+    def test_persistent_menu(self):
+        self.page.show_persistent_menu([{'type':'postback', 'title':'yes', 'payload':'hobbang'},
+                                        {'type':'web_url', 'title':'url', 'value':'url'},
+                                        Template.ButtonPostBack('ho', 'bbang')])
+
+        self.page._send_thread_settings.assert_called_with(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread",
+            "call_to_actions": [{'type':'postback', 'title':'yes', 'payload':'hobbang'},
+                                {'type':'web_url', 'title':'url', 'url':'url'},
+                                {'type':'postback', 'title':'ho', 'payload':'bbang'}]
+        }))
+
+        self.page.show_persistent_menu([Template.ButtonPostBack('ho', 'bbang'),
+                                        Template.ButtonWeb('title', 'url')])
+
+        self.page._send_thread_settings.assert_called_with(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread",
+            "call_to_actions": [{'type':'postback', 'title':'ho', 'payload':'bbang'},
+                                {'type':'web_url', 'title':'title', 'url':'url'}]
+        }))
+
+        with self.assertRaises(ValueError):
+            self.page.show_persistent_menu("hi")
+
+        with self.assertRaises(ValueError):
+            self.page.show_persistent_menu([Template.ButtonPhoneNumber('ho', 'bbang'),
+                                            Template.ButtonWeb('title', 'url')])
+
+        with self.assertRaises(ValueError):
+            self.page.show_persistent_menu([{'type':'ho'}])
+
+        self.page.hide_persistent_menu()
+        self.page._send_thread_settings.assert_called_with(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread"
+        }))

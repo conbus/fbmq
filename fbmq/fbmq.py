@@ -3,6 +3,7 @@ import re
 import requests
 
 from .payload import *
+from .template import *
 
 
 # I agree with him : http://stackoverflow.com/a/36937/3843242
@@ -277,6 +278,83 @@ class Page(object):
                           sender_action=SenderAction.MARK_SEEN)
 
         self._send(payload)
+
+    """
+    thread settings
+    """
+
+    def _send_thread_settings(self, data):
+        r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings",
+                          params={"access_token": self.page_access_token},
+                          data=data,
+                          headers={'Content-type': 'application/json'})
+
+        if r.status_code != requests.codes.ok:
+            print(r.text)
+
+    def greeting(self, text):
+        if not text or not isinstance(text, str):
+            raise ValueError("greeting text error")
+
+        self._send_thread_settings(json.dumps({
+            'setting_type': 'greeting',
+            'greeting': {
+                'text': text
+            }
+        }))
+
+    def show_starting_button(self, payload):
+        if not payload or not isinstance(payload, str):
+            raise ValueError("show_starting_button payload error")
+
+        self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "new_thread",
+            "call_to_actions": [{
+                "payload": payload
+            }]
+        }))
+
+    def hide_starting_button(self):
+        self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "new_thread"
+        }))
+
+    def show_persistent_menu(self, buttons):
+        if not buttons or not isinstance(buttons, list):
+            raise ValueError('show_persistent_menu buttons error')
+
+        buttons = Buttons.convert_shortcut_buttons(buttons)
+
+        buttons_dict = []
+        for button in buttons:
+            if isinstance(button, ButtonWeb):
+                buttons_dict.append({
+                    "type": "web_url",
+                    "title": button.title,
+                    "url": button.url
+                })
+            elif isinstance(button, ButtonPostBack):
+                buttons_dict.append({
+                    "type": "postback",
+                    "title": button.title,
+                    "payload": button.payload
+                })
+            else:
+                raise ValueError('show_persistent_menu button type must be "url" or "postback"')
+
+        self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread",
+            "call_to_actions": buttons_dict
+        }))
+
+    def hide_persistent_menu(self):
+        self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread"
+        }))
 
     """
     decorations
