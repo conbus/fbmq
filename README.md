@@ -216,7 +216,7 @@ def callback_picked_genre(payload, event):
 
 if you want to handle only quick_reply callback without button postback
 ```python
-@page.callback(['DEVELOPED_DEFINED_PAYLOAD'], types=['QUICK_REPLY'])
+@page.callback(['PICK_ACTION', 'PICK_COMEDY'], types=['QUICK_REPLY'])
 ```
 
 ##### typing on/off
