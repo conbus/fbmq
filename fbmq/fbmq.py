@@ -232,6 +232,17 @@ class Page(object):
         self._page_id = data['id']
         self._page_name = data['name']
 
+    def get_user_profile(self, fb_user_id):
+        r = requests.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
+                         params={"access_token": self.page_access_token},
+                         headers={'Content-type': 'application/json'})
+
+        if r.status_code != requests.codes.ok:
+            print(r.text)
+            return
+
+        return json.loads(r.text)
+
     def _send(self, payload, callback=None):
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                           params={"access_token": self.page_access_token},

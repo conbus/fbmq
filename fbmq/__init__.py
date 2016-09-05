@@ -1,4 +1,4 @@
-__version__ = '2.0.0b1'
+__version__ = '2.0.0'
 
 from .fbmq import *
 from . import attachment as Attachment
