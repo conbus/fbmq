@@ -1,18 +1,23 @@
+# coding: utf-8
+import os
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.sys.path.insert(0,parentdir)
+
 import json
-from config import CONFIG
+from example.config import CONFIG
 from fbmq import Attachment, Template, QuickReply, NotificationType
-from fbpage import page
+from example.fbpage import page
 
 USER_SEQ = {}
 
 
 @page.handle_optin
 def received_authentication(event):
-    sender_id = event.get("sender", {}).get("id")
-    recipient_id = event.get("recipient", {}).get("id")
-    time_of_auth = event.get("timestamp")
+    sender_id = event.sender_id
+    recipient_id = event.recipient_id
+    time_of_auth = event.timestamp
 
-    pass_through_param = event.get("optin", {}).get("ref")
+    pass_through_param = event.optin.get("ref")
 
     print("Received authentication for user %s and page %s with pass "
           "through param '%s' at %s" % (sender_id, recipient_id, pass_through_param, time_of_auth))
@@ -22,7 +27,7 @@ def received_authentication(event):
 
 @page.handle_echo
 def received_echo(event):
-    message = event.get("message", {})
+    message = event.message
     message_id = message.get("mid")
     app_id = message.get("app_id")
     metadata = message.get("metadata")
@@ -32,10 +37,10 @@ def received_echo(event):
 
 @page.handle_message
 def received_message(event):
-    sender_id = event.get("sender", {}).get("id")
-    recipient_id = event.get("recipient", {}).get("id")
-    time_of_message = event.get("timestamp")
-    message = event.get("message", {})
+    sender_id = event.sender_id
+    recipient_id = event.recipient_id
+    time_of_message = event.timestamp
+    message = event.message
     print("Received message for user %s and page %s at %s with message:"
           % (sender_id, recipient_id, time_of_message))
     print(message)
@@ -70,7 +75,7 @@ def received_message(event):
 
 @page.handle_delivery
 def received_delivery_confirmation(event):
-    delivery = event.get("delivery", {})
+    delivery = event.delivery
     message_ids = delivery.get("mids")
     watermark = delivery.get("watermark")
 
@@ -83,11 +88,11 @@ def received_delivery_confirmation(event):
 
 @page.handle_postback
 def received_postback(event):
-    sender_id = event.get("sender", {}).get("id")
-    recipient_id = event.get("recipient", {}).get("id")
-    time_of_postback = event.get("timestamp")
+    sender_id = event.sender_id
+    recipient_id = event.recipient_id
+    time_of_postback = event.timestamp
 
-    payload = event.get("postback", {}).get("payload")
+    payload = event.postback_payload
 
     print("Received postback for user %s and page %s with payload '%s' at %s"
           % (sender_id, recipient_id, payload, time_of_postback))
@@ -97,17 +102,17 @@ def received_postback(event):
 
 @page.handle_read
 def received_message_read(event):
-    watermark = event.get("read", {}).get("watermark")
-    seq = event.get("read", {}).get("seq")
+    watermark = event.read.get("watermark")
+    seq = event.read.get("seq")
 
     print("Received message read event for watermark %s and sequence number %s" % (watermark, seq))
 
 
 @page.handle_account_linking
 def received_account_link(event):
-    sender_id = event.get("sender", {}).get("id")
-    status = event.get("account_linking", {}).get("status")
-    auth_code = event.get("account_linking", {}).get("authorization_code")
+    sender_id = event.sender_id
+    status = event.account_linking.get("status")
+    auth_code = event.account_linking.get("authorization_code")
 
     print("Received account link event with for user %s with status %s and auth code %s "
           % (sender_id, status, auth_code))
@@ -179,7 +184,7 @@ def send_button(recipient):
     ]))
 
 
-@page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
+@page.callback(['DEVELOPED_DEFINED_PAYLOAD'])
 def callback_clicked_button(payload, event):
     print(payload, event)
 
@@ -258,7 +263,7 @@ def send_quick_reply(recipient):
               metadata="DEVELOPER_DEFINED_METADATA")
 
 
-@page.callback_quick_reply(['PICK_ACTION'])
+@page.callback(['PICK_ACTION'])
 def callback_picked_genre(payload, event):
     print(payload, event)
 

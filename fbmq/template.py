@@ -21,7 +21,7 @@ class Buttons(object):
                     if item.get('type') in ['web_url', 'postback', 'phone_number']:
                         type = item.get('type')
                         title = item.get('title')
-                        value = item.get('value')
+                        value = item.get('value', item.get('url', item.get('payload')))
 
                         if type == 'web_url':
                             result.append(ButtonWeb(title=title, url=value))

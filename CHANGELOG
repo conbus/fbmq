@@ -4,6 +4,15 @@ FBMQ Changelog
 Latest
 ------
 
+2.0.0
+-----
+
+* Feature : All of page handlers have parameter Event instead of a dict.
+* Feature : Support a thread setting
+* Deprecated : remove callback_postback, callback_quick_reply
+* Feature : Add a decorator - page.callback(['payload'], types=['QUICK_REPLY', 'POSTBACK'])
+* Feature : Add a page method, get_user_profile(fb_user_id), to get facebook user profile
+
 1.7.0
 -----
 

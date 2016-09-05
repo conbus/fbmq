@@ -27,6 +27,10 @@ Facebook messenger platform api full features are supported
   * [options](#options)
     * [notification type](#notification-type)
     * [callback](#callback) 
+* [Thread settings](#thread-settings)
+  * [greeting text](#greeting-text)
+  * [get started button](#get-started-button)
+  * [persistent menu](#persistent-menu)
 * [Example](#example)
 
 
@@ -52,20 +56,22 @@ def webhook():
 
 @page.handle_message
 def message_handler(event):
-  sender_id = event['sender']['id']
-  message = event['message']
+  """:type event: fbmq.Event"""
+  sender_id = event.sender_id
+  message = event.message_text
   
-  page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
+  page.send(sender_id, "thank you! your message is '%s'" % message)
 
 @page.after_send
 def after_send(payload, response):
+  """:type payload: fbmq.Payload"""
   print("complete")
 ```
 
 ### handlers
 A spec in detail - https://developers.facebook.com/docs/messenger-platform/webhook-reference
 
-`@page.handle_message` - This callback will occur when a message has been sent to your page.
+`@page.handle_message` - This callback will occur when a message has been sent to your page. (`quick reply` is also handled in here)
 
 `@page.handle_echo` - This callback will occur when a message has been sent by your page
 
@@ -81,6 +87,39 @@ A spec in detail - https://developers.facebook.com/docs/messenger-platform/webho
 
 `@page.after_send` - This callback will occur when page.send function has been called.
 
+#### Event parameter (fbmq.Event class)
+
+`event.sender_id` _str_ : message sender id, user id
+
+`event.recipient_id` _str_ : message receiver id, page id
+
+`event.timestamp` _number_ : timestamp when message is received
+
+`event.message` _dict_ : message dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received)
+
+`event.message_text` _str_ : `event.message.get('text')`
+
+`event.message_attachments` _str_ : `event.message.get('attachments')`
+
+`event.quick_reply` _dict_ : quick reply dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received)
+
+`event.quick_reply_payload` _str_ : `event.quick_reply.get('payload')
+
+`event.postback` _dict_ : postback dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received)
+
+`event.postback_payload` _str_ : `event.postback.get('payload')
+
+`event.optin` _dict_ : dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/authentication)
+
+`event.account_linking` _dict_: dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/account-linking)
+
+`event.delivery` _dict_: dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-delivered)
+
+`event.read` _dict_: dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read)
+
+
+`event.is_*` _bool_ - True if event type is valid
+
 #### if you don't need a decorator
 ```python
 page = fbmq.Page(PAGE_ACCESS_TOKEN, after_send=after_send)
@@ -92,12 +131,14 @@ def webhook():
   return "ok"
 
 def message_handler(event):
-  sender_id = event['sender']['id']
-  message = event['message']
+  """:type event: fbmq.Event"""
+  sender_id = event.sender_id
+  message = event.message_text
   
-  page.send(sender_id, "thank you! your message is '%s'" % message.get('text'))
+  page.send(sender_id, "thank you! your message is '%s'" % message)
 
 def after_send(payload, response):
+  """:type event: fbmq.Payload"""
   print("complete")
 ```
 
@@ -164,14 +205,18 @@ page.send(recipient_id,
 ##### quick reply callback
 you can define easily a quick reply callback method.
 ```python
-@page.callback_quick_reply(['PICK_ACTION', 'PICK_COMEDY'])
+@page.callback(['PICK_ACTION', 'PICK_COMEDY'])
 def callback_picked_genre(payload, event):
   print(payload, event)
   
 # Also supported regex, it works corretly
-# @page.callback_quick_reply(['PICK_(.+)'])
+# @page.callback(['PICK_(.+)'])
 ```
 
+if you want to handle only quick_reply callback without button postback
+```python
+@page.callback(['DEVELOPED_DEFINED_PAYLOAD'], types=['QUICK_REPLY'])
+```
 
 ##### typing on/off
 ```python
@@ -203,12 +248,17 @@ page.send(recipient_id, Template.Buttons("hello", buttons))
 ##### button callback
 you can define easily a button postback method (it works only postback type buttons).
 ```python
-@page.callback_button(['DEVELOPED_DEFINED_PAYLOAD'])
+@page.callback(['DEVELOPED_DEFINED_PAYLOAD'])
 def callback_clicked_button(payload, event):
   print(payload, event)
   
 # Also supported regex, it works corretly
-# @page.callback_button(['DEVELOPED_DEFINE(.+)'])
+# @page.callback(['DEVELOPED_DEFINE(.+)'])
+```
+
+if you want to handle only button's postback without quick_reply callback
+```python
+@page.callback(['DEVELOPED_DEFINED_PAYLOAD'], types=['POSTBACK'])
 ```
 
 
@@ -288,6 +338,32 @@ def callback(payload, response):
   print('response : ' + response.text)
   
 page.send(recipient_id, 'hello', callback=callback)
+```
+
+# Thread settings
+### Greeting text
+```python
+page.greeting("Welcome!")
+```
+
+### Get started button
+```python
+page.show_starting_button("START_PAYLOAD")
+
+@page.callback(['START_PAYLOAD'])
+def start_callback(payload, event):
+  print("Let's start!")
+```
+
+### Persistent menu
+```python
+page.show_persistent_menu([Template.ButtonPostBack('MENU1', 'MENU_PAYLOAD/1'),
+                           Template.ButtonPostBack('MENU2', 'MENU_PAYLOAD/2')])
+
+@page.callback(['MENU_PAYLOAD/(.+)'])
+def click_persistent_menu(payload, event):
+  click_menu = payload.split('/')[1]
+  print("you clicked %s menu" % click_menu)
 ```
 
 # Example
