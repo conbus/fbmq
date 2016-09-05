@@ -31,6 +31,7 @@ Facebook messenger platform api full features are supported
   * [greeting text](#greeting-text)
   * [get started button](#get-started-button)
   * [persistent menu](#persistent-menu)
+* [Fetch user/page profile](#fetch-userpage-profile)
 * [Example](#example)
 
 
@@ -364,6 +365,16 @@ page.show_persistent_menu([Template.ButtonPostBack('MENU1', 'MENU_PAYLOAD/1'),
 def click_persistent_menu(payload, event):
   click_menu = payload.split('/')[1]
   print("you clicked %s menu" % click_menu)
+```
+
+# Fetch user/page profile
+```
+page_id = page.page_id
+page_name = page.page_name
+user_profile = page.get_user_profile(event.sender_id) # return dict
+print(user_profile)
+
+#{"first_name":"...", "last_name":"...", "profile_pic":"...", "locale":"...", "timezone":9, "gender":"..."}
 ```
 
 # Example
