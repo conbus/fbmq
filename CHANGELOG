@@ -11,6 +11,7 @@ Latest
 * Feature : Support a thread setting
 * Deprecated : remove callback_postback, callback_quick_reply
 * Feature : Add a decorator - page.callback(['payload'], types=['QUICK_REPLY', 'POSTBACK'])
+* Feature : Add a page method, get_user_profile(fb_user_id), to get facebook user profile
 
 1.7.0
 -----
