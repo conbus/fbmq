@@ -258,6 +258,8 @@ class Page(object):
         if self._after_send is not None:
             self._after_send(payload, r)
 
+        return r
+
     def send(self, recipient_id, message, quick_replies=None, metadata=None,
              notification_type=None, callback=None):
         text = message if isinstance(message, str) else None
@@ -270,7 +272,7 @@ class Page(object):
                                           metadata=metadata),
                           notification_type=notification_type)
 
-        self._send(payload, callback=callback)
+        return self._send(payload, callback=callback)
 
     def typing_on(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
