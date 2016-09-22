@@ -4,6 +4,11 @@ FBMQ Changelog
 Latest
 ------
 
+2.0.1
+_____
+
+* Feature : page.send method return Response
+
 2.0.0
 -----
 
