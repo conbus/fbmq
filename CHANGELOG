@@ -4,6 +4,10 @@ FBMQ Changelog
 Latest
 ------
 
+2.0.2
+-----
+* Fixed Message encoding error by @jdcaballerov
+ 
 2.0.1
 _____
 
