@@ -4,6 +4,11 @@ FBMQ Changelog
 Latest
 ------
 
+2.0.3
+-----
+* Fixed Message encoding error on python2.x
+* Fixed issue when send in text, both text and attachment got check up
+
 2.0.2
 -----
 * Fixed Message encoding error by @jdcaballerov
