@@ -2,6 +2,7 @@ import sys
 import json
 import re
 import requests
+import aiohttp
 
 from .payload import *
 from .template import *
@@ -134,11 +135,14 @@ class Event(object):
 
 
 class Page(object):
-    def __init__(self, page_access_token, **options):
+    def __init__(self, page_access_token, loop=False,  **options):
         self.page_access_token = page_access_token
         self._after_send = options.pop('after_send', None)
         self._page_id = None
         self._page_name = None
+        if not loop:
+            raise ValueError("loop is mandatory")
+        self._loop = loop
 
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
     # these are only set by decorators
@@ -217,49 +221,56 @@ class Page(object):
 
         return self._page_name
 
-    def _fetch_page_info(self):
-        r = requests.get("https://graph.facebook.com/v2.6/me",
-                         params={"access_token": self.page_access_token},
-                         headers={'Content-type': 'application/json'})
+    async def _fetch_page_info(self):
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/me",
+                             data=json.dumps({"access_token": self.page_access_token}),
+                             headers={'Content-type': 'application/json'})
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
-            return
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
 
-        data = json.loads(r.text)
-        if 'id' not in data or 'name' not in data:
-            raise ValueError('Could not fetch data : GET /v2.6/me')
+            data = json.loads(r.text())
+            if 'id' not in data or 'name' not in data:
+                raise ValueError('Could not fetch data : GET /v2.6/me')
 
-        self._page_id = data['id']
-        self._page_name = data['name']
+            self._page_id = data['id']
+            self._page_name = data['name']
 
-    def get_user_profile(self, fb_user_id):
-        r = requests.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
-                         params={"access_token": self.page_access_token},
-                         headers={'Content-type': 'application/json'})
+    async def get_user_profile(self, fb_user_id):
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
-            return
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
+                             data=json.dumps({"access_token": self.page_access_token}),
+                             headers={'Content-type': 'application/json'})
 
-        return json.loads(r.text)
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
 
-    def _send(self, payload, callback=None):
-        r = requests.post("https://graph.facebook.com/v2.6/me/messages",
-                          params={"access_token": self.page_access_token},
-                          data=payload.to_json(),
-                          headers={'Content-type': 'application/json'})
+        return json.loads(r.text())
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
+    async def _send(self, payload, callback=None):
 
-        if callback is not None:
-            callback(payload, r)
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/me/messages",
+                             data=json.dumps(payload),
+                             headers={'Content-type': 'application/json'})
 
-        if self._after_send is not None:
-            self._after_send(payload, r)
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
 
-        return r
+            if callback is not None:
+                callback(payload, r)
+
+            if self._after_send is not None:
+                self._after_send(payload, r)
+
+            r.text = r.text()
+            r.status_code = r.status
+            return r
 
     def send(self, recipient_id, message, quick_replies=None, metadata=None,
              notification_type=None, callback=None):
@@ -301,14 +312,18 @@ class Page(object):
     thread settings
     """
 
-    def _send_thread_settings(self, data):
-        r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings",
-                          params={"access_token": self.page_access_token},
-                          data=data,
-                          headers={'Content-type': 'application/json'})
+    async def _send_thread_settings(self, data):
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
+
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.post("https://graph.facebook.com/v2.6/me/thread_settings",
+                             data=data,
+                             headers={'Content-type': 'application/json'})
+
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
+
 
     def greeting(self, text):
         if not text or not isinstance(text, str):
