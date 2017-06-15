@@ -1,8 +1,10 @@
-import sys
 import json
 import re
-import requests
+import socket
+import sys
+
 import aiohttp
+import requests
 
 from .payload import *
 from .template import *
@@ -135,7 +137,7 @@ class Event(object):
 
 
 class Page(object):
-    def __init__(self, page_access_token, loop=False,  **options):
+    def __init__(self, page_access_token, loop=False, **options):
         self.page_access_token = page_access_token
         self._after_send = options.pop('after_send', None)
         self._page_id = None
@@ -224,8 +226,8 @@ class Page(object):
     async def _fetch_page_info(self):
         async with aiohttp.ClientSession(loop=self._loop) as client:
             r = await client.get("https://graph.facebook.com/v2.6/me",
-                             data=json.dumps({"access_token": self.page_access_token}),
-                             headers={'Content-type': 'application/json'})
+                                 data=json.dumps({"access_token": self.page_access_token}),
+                                 headers={'Content-type': 'application/json'})
 
             if r.status != requests.codes.ok:
                 print(r.text())
@@ -242,8 +244,8 @@ class Page(object):
 
         async with aiohttp.ClientSession(loop=self._loop) as client:
             r = await client.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
-                             data=json.dumps({"access_token": self.page_access_token}),
-                             headers={'Content-type': 'application/json'})
+                                 data=json.dumps({"access_token": self.page_access_token}),
+                                 headers={'Content-type': 'application/json'})
 
             if r.status != requests.codes.ok:
                 print(r.text())
@@ -252,14 +254,15 @@ class Page(object):
         return json.loads(r.text())
 
     async def _send(self, payload, callback=None):
-
-        async with aiohttp.ClientSession(loop=self._loop) as client:
-            r = await client.get("https://graph.facebook.com/v2.6/me/messages",
-                             data=json.dumps(payload),
-                             headers={'Content-type': 'application/json'})
+        tcpconnector = aiohttp.TCPConnector(family=socket.AF_INET, verify_ssl=False)
+        async with aiohttp.ClientSession(loop=self._loop, connector=tcpconnector) as client:
+            r = await client.post("https://graph.facebook.com/v2.6/me/messages",
+                                  params={"access_token": self.page_access_token},
+                                  data=payload.to_json(),
+                                  headers={'Content-type': 'application/json'})
 
             if r.status != requests.codes.ok:
-                print(r.text())
+                print('Invalid state received from facebook' + str(r.status) + ' ' + r.text())
                 return
 
             if callback is not None:
@@ -272,12 +275,13 @@ class Page(object):
             r.status_code = r.status
             return r
 
-    def send(self, recipient_id, message, quick_replies=None, metadata=None,
-             notification_type=None, callback=None):
+    async def send(self, recipient_id, message, quick_replies=None, metadata=None,
+                   notification_type=None, callback=None):
         if sys.version_info >= (3, 0):
             text = message if isinstance(message, str) else None
         else:
-            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message, unicode) else None
+            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message,
+                                                                                                  unicode) else None
 
         attachment = message if not text else None
 
@@ -288,7 +292,7 @@ class Page(object):
                                           metadata=metadata),
                           notification_type=notification_type)
 
-        return self._send(payload, callback=callback)
+        return await self._send(payload, callback=callback)
 
     def typing_on(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
@@ -314,16 +318,14 @@ class Page(object):
 
     async def _send_thread_settings(self, data):
 
-
         async with aiohttp.ClientSession(loop=self._loop) as client:
             r = await client.post("https://graph.facebook.com/v2.6/me/thread_settings",
-                             data=data,
-                             headers={'Content-type': 'application/json'})
+                                  data=data,
+                                  headers={'Content-type': 'application/json'})
 
             if r.status != requests.codes.ok:
                 print(r.text())
                 return
-
 
     def greeting(self, text):
         if not text or not isinstance(text, str):
