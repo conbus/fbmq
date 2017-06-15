@@ -4,6 +4,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/conbus/fbmq/badge.svg?branch=master)](https://coveralls.io/github/conbus/fbmq?branch=master)
 [![PyPI](https://img.shields.io/pypi/l/fbmq.svg?v=1&maxAge=2592000)](https://pypi.python.org/pypi/fbmq)
 
+
+## ASYNC
+Unlike the original version this have a async class PageAsync.
+For use this version use Python 3.6.1
+
 A Python Library For Using The Facebook Messenger Platform API (Python Facebook Chat & Chatbot Library)
 Facebook messenger platform api full features are supported
 ## Table of Contents

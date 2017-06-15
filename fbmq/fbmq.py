@@ -1,7 +1,7 @@
-import sys
 import json
 import re
-from socket import socket
+import socket
+import sys
 
 import aiohttp
 import requests
@@ -269,7 +269,8 @@ class Page(object):
         if sys.version_info >= (3, 0):
             text = message if isinstance(message, str) else None
         else:
-            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message, unicode) else None
+            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message,
+                                                                                                  unicode) else None
 
         attachment = message if not text else None
 
@@ -487,7 +488,7 @@ class PageAsync(object):
             print("there's no %s handler" % name)
 
     async def handle_webhook(self, payload, optin=None, message=None, echo=None, delivery=None,
-                       postback=None, read=None, account_linking=None):
+                             postback=None, read=None, account_linking=None):
         data = json.loads(payload)
 
         # Make sure this is a page subscription
