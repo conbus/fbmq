@@ -61,6 +61,10 @@ class Event(object):
         return self.messaging.get("postback", {})
 
     @property
+    def postback_referral(self):
+        return self.messaging.get("postback", {}).get("referral", {})
+
+    @property
     def optin(self):
         return self.messaging.get("optin", {})
 
@@ -117,6 +121,10 @@ class Event(object):
         return 'postback' in self.messaging
 
     @property
+    def is_postback_referral(self):
+        return self.is_postback and 'referral' in self.postback
+
+    @property
     def is_read(self):
         return 'read' in self.messaging
 
@@ -143,6 +151,10 @@ class Event(object):
     @property
     def referral_ref(self):
         return self.messaging.get("referral", {}).get("ref", '')
+
+    @property
+    def postback_referral_ref(self):
+        return self.messaging.get("postback", {}).get("referral", {}).get("ref", '')
 
 
 class Page(object):
