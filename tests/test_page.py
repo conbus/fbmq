@@ -119,6 +119,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472026867080)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
@@ -158,6 +159,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472026869186)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
@@ -198,6 +200,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472026868763)
             self.assertEquals(event.sender_id, '1691462197845448')
             self.assertEquals(event.recipient_id, '1134343043305865')
@@ -236,6 +239,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertTrue(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 0)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
@@ -274,6 +278,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertTrue(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472028542079)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
@@ -289,6 +294,46 @@ class PageTest(unittest.TestCase):
             counter2()
 
         self.page.handle_webhook(payload, account_linking=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_webhook_referral(self):
+        payload = """
+        {"object":"page","entry":[{"id":"1691462197845448","time":1472028542079,
+        "messaging":[{
+            "sender":{"id":"1134343043305865"},"recipient":{"id":"1691462197845448"},"timestamp":1472028542079,
+            "referral":{"ref":"REFTEST","source":"SHORTLINK","type": "OPEN_THREAD"}}]}]}
+        """
+        counter = mock.MagicMock()
+
+        @self.page.handle_referral
+        def handler1(event):
+            self.assertFalse(event.is_message)
+            self.assertFalse(event.is_text_message)
+            self.assertFalse(event.is_attachment_message)
+            self.assertFalse(event.is_quick_reply)
+            self.assertFalse(event.is_echo)
+            self.assertFalse(event.is_read)
+            self.assertFalse(event.is_postback)
+            self.assertFalse(event.is_optin)
+            self.assertFalse(event.is_delivery)
+            self.assertFalse(event.is_account_linking)
+            self.assertTrue(event.is_referral)
+            self.assertEquals(event.timestamp, 1472028542079)
+            self.assertEquals(event.sender_id, '1134343043305865')
+            self.assertEquals(event.recipient_id, '1691462197845448')
+            self.assertEquals(event.message_text, None)
+            self.assertEqual(event.referral_ref, 'REFTEST')
+            counter()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, referral=handler2)
         self.assertEquals(1, counter2.call_count)
 
     def test_handle_webhook_postback(self):
@@ -313,6 +358,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472028006107)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
@@ -354,6 +400,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472028006107)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
@@ -403,6 +450,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(event.is_optin)
             self.assertFalse(event.is_delivery)
             self.assertFalse(event.is_account_linking)
+            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472028637825)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')

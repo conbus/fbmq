@@ -77,6 +77,10 @@ class Event(object):
         return self.messaging.get("read", {})
 
     @property
+    def referral(self):
+        return self.messaging.get("referral", {})
+
+    @property
     def message_mid(self):
         return self.messaging.get("message", {}).get("mid", None)
 
@@ -121,6 +125,10 @@ class Event(object):
         return 'account_linking' in self.messaging
 
     @property
+    def is_referral(self):
+        return 'referral' in self.messaging
+
+    @property
     def is_quick_reply(self):
         return self.messaging.get("message", {}).get("quick_reply", None) is not None
 
@@ -132,6 +140,10 @@ class Event(object):
     def postback_payload(self):
         return self.messaging.get("postback", {}).get("payload", '')
 
+    @property
+    def referral_ref(self):
+        return self.messaging.get("referral", {}).get("ref", '')
+
 
 class Page(object):
     def __init__(self, page_access_token, **options):
@@ -140,7 +152,7 @@ class Page(object):
         self._page_id = None
         self._page_name = None
 
-    # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
+    # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking, referral.
     # these are only set by decorators
     _webhook_handlers = {}
 
@@ -161,7 +173,7 @@ class Page(object):
             print("there's no %s handler" % name)
 
     def handle_webhook(self, payload, optin=None, message=None, echo=None, delivery=None,
-                       postback=None, read=None, account_linking=None):
+                       postback=None, read=None, account_linking=None, referral=None):
         data = json.loads(payload)
 
         # Make sure this is a page subscription
@@ -200,6 +212,8 @@ class Page(object):
                 self._call_handler('read', read, event)
             elif event.is_account_linking:
                 self._call_handler('account_linking', account_linking, event)
+            elif event.is_referral:
+                self._call_handler('referral', referral, event)
             else:
                 print("Webhook received unknown messagingEvent:", event)
 
@@ -398,6 +412,9 @@ class Page(object):
 
     def handle_account_linking(self, func):
         self._webhook_handlers['account_linking'] = func
+
+    def handle_referral(self, func):
+        self._webhook_handlers['referral'] = func
 
     def after_send(self, func):
         self._after_send = func
