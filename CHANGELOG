@@ -4,6 +4,10 @@ FBMQ Changelog
 Latest
 ------
 
+2.1.0
+-----
+* Passing Parameters via M.me Links supported. (@anton-nayshtut)
+
 2.0.3
 -----
 * Fixed Message encoding error on python2.x
