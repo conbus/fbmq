@@ -73,6 +73,19 @@ class Generic(object):
         }
 
 
+class List(object):
+    def __init__(self, elements, top_element_style=None, buttons=None):
+        self.type = 'template'
+        self.payload = {
+            'template_type': 'list',
+            'elements': elements
+        }
+        if top_element_style:
+            self.payload['top_element_style'] = top_element_style
+        if buttons:
+            self.payload['buttons'] = buttons
+
+
 class GenericElement(object):
     def __init__(self, title, subtitle=None, item_url=None, image_url=None, buttons=None):
         self.title = title
