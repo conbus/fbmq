@@ -18,7 +18,7 @@ class Buttons(object):
                 if isinstance(item, BaseButton):
                     result.append(item)
                 elif isinstance(item, dict):
-                    if item.get('type') in ['web_url', 'postback', 'phone_number']:
+                    if item.get('type') in ['web_url', 'postback', 'phone_number', 'element_share']:
                         type = item.get('type')
                         title = item.get('title')
                         value = item.get('value', item.get('url', item.get('payload')))
@@ -29,6 +29,8 @@ class Buttons(object):
                             result.append(ButtonPostBack(title=title, payload=value))
                         elif type == 'phone_number':
                             result.append(ButtonPhoneNumber(title=title, payload=value))
+                        elif type == 'element_share':
+                            result.append(ButtonShare())
 
                     else:
                         raise ValueError('Invalid button type')
@@ -62,6 +64,11 @@ class ButtonPhoneNumber(BaseButton):
         self.type = 'phone_number'
         self.title = title
         self.payload = payload
+
+
+class ButtonShare(BaseButton):
+    def __init__(self):
+        self.type = 'element_share'
 
 
 class Generic(object):
