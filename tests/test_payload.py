@@ -28,6 +28,8 @@ class PayloadTest(unittest.TestCase):
     def test_message(self):
         with self.assertRaises(Exception):
             m = Payload.Message(text="hello", attachment=Attachment.Image('img'))
+        with self.assertRaises(ValueError):
+            m = Payload.Message(text="hello", quick_replies=Payload.QuickReply(title='Yes', payload='PICK_YES'))
 
         m = Payload.Message(text="hello", metadata="METADATA", quick_replies=[{'title': 'Yes', 'payload': 'PICK_YES'}])
         self.assertEquals('{"attachment": null, "metadata": "METADATA", '
