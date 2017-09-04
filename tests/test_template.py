@@ -66,6 +66,33 @@ class TemplateTest(unittest.TestCase):
             ' "image_url": "https://test.com/img", "item_url": "https://test.com", "subtitle": "subtitle",'
             ' "title": "generic"}], "template_type": "generic"}, "type": "template"}', utils.to_json(generic))
 
+    def test_list(self):
+        listt = Template.List(
+            elements=[Template.GenericElement(title='generic1', subtitle='subtitle1', item_url='https://test1.com',
+                                              image_url='https://test.com1/img',
+                                              buttons=[
+                                                  {'type': 'web_url', 'title': 'title', 'value': 'https://test1.com'}]),
+                      Template.GenericElement(title='generic2', subtitle='subtitle2', item_url='https://test2.com',
+                                              image_url='https://test.com2/img',
+                                              buttons=[
+                                                  {'type': 'web_url', 'title': 'title', 'value': 'https://test2.com'}])],
+            top_element_style='large',
+            buttons=[
+                { "title": "View More", "type": "postback", "payload": "payload" },
+                { "title": "View Less", "type": "postback", "payload": "payload"}]
+        )
+
+        self.assertEquals(
+            '{"payload": {"buttons": [{"payload": "payload", "title": "View More", "type": "postback"}, '
+            '{"payload": "payload", "title": "View Less", "type": "postback"}], '
+            '"elements": [{"buttons": [{"title": "title", "type": "web_url", "url": "https://test1.com"}], '
+            '"image_url": "https://test.com1/img", "item_url": "https://test1.com", "subtitle": "subtitle1", "title": "generic1"}, '
+            '{"buttons": [{"title": "title", "type": "web_url", "url": "https://test2.com"}], '
+            '"image_url": "https://test.com2/img", "item_url": "https://test2.com", "subtitle": "subtitle2", "title": "generic2"}], '
+            '"template_type": "list", '
+            '"top_element_style": "large"}, '
+            '"type": "template"}', utils.to_json(listt))
+
     def test_account_link(self):
         link = Template.AccountLink(text="title", account_link_url="http://test.com", account_unlink_button=True)
         self.assertEquals('{"payload": {"buttons": [{"type": "account_link", "url": "http://test.com"}, '
