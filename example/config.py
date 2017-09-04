@@ -1,5 +1,5 @@
 CONFIG = {
-    'FACEBOOK_TOKEN': '###',
-    'VERIFY_TOKEN': 'verify_token',
-    'SERVER_URL': 'https://yourdomain'
+    'FACEBOOK_TOKEN': 'EAAEX14iK41gBAE2Y2kOd65SjX5u2GNS5DGEJRO2cqeFs2i9kAhTFUM6nEzoq1tG2cwCRtjTKLN3uib5wn3edG4xHZCh1DZCI9VK4wRByngq61yTQYm0oJglRso0HloCq1xHkPR93zy9SO1v36zIsQCQZCs9klrcpl8XHyWPNQZDZD',
+    'VERIFY_TOKEN': 'verify_simsimbot',
+    'SERVER_URL': 'https://karl.llisten.me'
 }

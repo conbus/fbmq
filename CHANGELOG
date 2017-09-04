@@ -4,6 +4,13 @@ FBMQ Changelog
 Latest
 ------
 
+2.2.0
+-----
+* Share Button template supported (@anton-nayshtut)
+* List template supported (@anton-nayshtut)
+* Raise value error to avoid unknown error in server (@hollalll726)
+
+
 2.1.0
 -----
 * Passing Parameters via M.me Links supported. (@anton-nayshtut)
