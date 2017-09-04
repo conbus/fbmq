@@ -19,17 +19,24 @@ class TemplateTest(unittest.TestCase):
         self.assertEquals('{"payload": "+82108011", "title": "title", "type": "phone_number"}', utils.to_json(btn))
         print(utils.to_json(btn))
 
+    def test_button_share(self):
+        btn = Template.ButtonShare()
+        self.assertEquals('{"type": "element_share"}', utils.to_json(btn))
+        print(utils.to_json(btn))
+
     def test_buttons(self):
         btns1 = Template.Buttons(text="Title", buttons=[
             {'type': 'web_url', 'title': 'title', 'value': 'https://test.com'},
             {'type': 'postback', 'title': 'title', 'value': 'TEST_PAYLOAD'},
             {'type': 'phone_number', 'title': 'title', 'value': '+82108011'},
+            {'type': 'element_share'},
         ])
 
         btns2 = Template.Buttons(text="Title", buttons=[
             Template.ButtonWeb(title="title", url="https://test.com"),
             Template.ButtonPostBack(title="title", payload="TEST_PAYLOAD"),
-            Template.ButtonPhoneNumber(title="title", payload="+82108011")
+            Template.ButtonPhoneNumber(title="title", payload="+82108011"),
+            Template.ButtonShare()
         ])
 
         self.assertEquals(utils.to_json(btns1), utils.to_json(btns2))
