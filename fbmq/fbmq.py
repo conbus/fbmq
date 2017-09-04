@@ -270,6 +270,27 @@ class Page(object):
 
         return json.loads(r.text)
 
+    def get_messenger_code(self, ref=None, image_size=1000):
+        d = {}
+        d['type']='standard'
+        d['image_size'] = image_size
+        if ref:
+            d['data'] = {'ref': ref}
+
+        r = requests.post("https://graph.facebook.com/v2.6/me/messenger_codes",
+                          params={"access_token": self.page_access_token},
+                          json=d,
+                          headers={'Content-type': 'application/json'})
+        if r.status_code != requests.codes.ok:
+            print(r.text)
+            return None
+
+        data = json.loads(r.text)
+        if 'uri' not in data:
+            raise ValueError('Could not fetch messener code : GET /v2.6/me')
+
+        return data['uri']
+
     def _send(self, payload, callback=None):
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
                           params={"access_token": self.page_access_token},
