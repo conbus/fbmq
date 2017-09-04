@@ -1,6 +1,9 @@
-import sys
 import json
 import re
+import socket
+import sys
+
+import aiohttp
 import requests
 
 from .payload import *
@@ -158,11 +161,14 @@ class Event(object):
 
 
 class Page(object):
-    def __init__(self, page_access_token, **options):
+    def __init__(self, page_access_token, loop=False, **options):
         self.page_access_token = page_access_token
         self._after_send = options.pop('after_send', None)
         self._page_id = None
         self._page_name = None
+        if not loop:
+            raise ValueError("loop is mandatory")
+        self._loop = loop
 
     # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking, referral.
     # these are only set by decorators
@@ -243,56 +249,65 @@ class Page(object):
 
         return self._page_name
 
-    def _fetch_page_info(self):
-        r = requests.get("https://graph.facebook.com/v2.6/me",
-                         params={"access_token": self.page_access_token},
-                         headers={'Content-type': 'application/json'})
+    async def _fetch_page_info(self):
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/me",
+                                 data=json.dumps({"access_token": self.page_access_token}),
+                                 headers={'Content-type': 'application/json'})
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
-            return
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
 
-        data = json.loads(r.text)
-        if 'id' not in data or 'name' not in data:
-            raise ValueError('Could not fetch data : GET /v2.6/me')
+            data = json.loads(r.text())
+            if 'id' not in data or 'name' not in data:
+                raise ValueError('Could not fetch data : GET /v2.6/me')
 
-        self._page_id = data['id']
-        self._page_name = data['name']
+            self._page_id = data['id']
+            self._page_name = data['name']
 
-    def get_user_profile(self, fb_user_id):
-        r = requests.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
-                         params={"access_token": self.page_access_token},
-                         headers={'Content-type': 'application/json'})
+    async def get_user_profile(self, fb_user_id):
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
-            return
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
+                                 data=json.dumps({"access_token": self.page_access_token}),
+                                 headers={'Content-type': 'application/json'})
 
-        return json.loads(r.text)
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
 
-    def _send(self, payload, callback=None):
-        r = requests.post("https://graph.facebook.com/v2.6/me/messages",
-                          params={"access_token": self.page_access_token},
-                          data=payload.to_json(),
-                          headers={'Content-type': 'application/json'})
+        return json.loads(r.text())
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
+    async def _send(self, payload, callback=None):
+        tcpconnector = aiohttp.TCPConnector(family=socket.AF_INET, verify_ssl=False)
+        async with aiohttp.ClientSession(loop=self._loop, connector=tcpconnector) as client:
+            r = await client.post("https://graph.facebook.com/v2.6/me/messages",
+                                  params={"access_token": self.page_access_token},
+                                  data=payload.to_json(),
+                                  headers={'Content-type': 'application/json'})
 
-        if callback is not None:
-            callback(payload, r)
+            if r.status != requests.codes.ok:
+                print('Invalid state received from facebook' + str(r.status) + ' ' + r.text())
+                return
 
-        if self._after_send is not None:
-            self._after_send(payload, r)
+            if callback is not None:
+                callback(payload, r)
 
-        return r
+            if self._after_send is not None:
+                self._after_send(payload, r)
 
-    def send(self, recipient_id, message, quick_replies=None, metadata=None,
-             notification_type=None, callback=None):
+            r.text = r.text()
+            r.status_code = r.status
+            return r
+
+    async def send(self, recipient_id, message, quick_replies=None, metadata=None,
+                   notification_type=None, callback=None):
         if sys.version_info >= (3, 0):
             text = message if isinstance(message, str) else None
         else:
-            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message, unicode) else None
+            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message,
+                                                                                                  unicode) else None
 
         attachment = message if not text else None
 
@@ -303,7 +318,7 @@ class Page(object):
                                           metadata=metadata),
                           notification_type=notification_type)
 
-        return self._send(payload, callback=callback)
+        return await self._send(payload, callback=callback)
 
     def typing_on(self, recipient_id):
         payload = Payload(recipient=Recipient(id=recipient_id),
@@ -327,14 +342,16 @@ class Page(object):
     thread settings
     """
 
-    def _send_thread_settings(self, data):
-        r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings",
-                          params={"access_token": self.page_access_token},
-                          data=data,
-                          headers={'Content-type': 'application/json'})
+    async def _send_thread_settings(self, data):
 
-        if r.status_code != requests.codes.ok:
-            print(r.text)
+        async with aiohttp.ClientSession(loop=self._loop) as client:
+            r = await client.post("https://graph.facebook.com/v2.6/me/thread_settings",
+                                  data=data,
+                                  headers={'Content-type': 'application/json'})
+
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
 
     def greeting(self, text):
         if not text or not isinstance(text, str):
@@ -427,6 +444,341 @@ class Page(object):
 
     def handle_referral(self, func):
         self._webhook_handlers['referral'] = func
+
+    def after_send(self, func):
+        self._after_send = func
+
+    _callback_default_types = ['QUICK_REPLY', 'POSTBACK']
+
+    def callback(self, payloads=None, types=None):
+        if types is None:
+            types = self._callback_default_types
+
+        if not isinstance(types, list):
+            raise ValueError('callback types must be list')
+
+        for type in types:
+            if type not in self._callback_default_types:
+                raise ValueError('callback types must be "QUICK_REPLY" or "POSTBACK"')
+
+        def wrapper(func):
+            if payloads is None:
+                return func
+
+            for payload in payloads:
+                if 'QUICK_REPLY' in types:
+                    self._quick_reply_callbacks[payload] = func
+                if 'POSTBACK' in types:
+                    self._button_callbacks[payload] = func
+
+            return func
+
+        return wrapper
+
+    def get_quick_reply_callbacks(self, event):
+        callbacks = []
+        for key in self._quick_reply_callbacks.keys():
+            if key not in self._quick_reply_callbacks_key_regex:
+                self._quick_reply_callbacks_key_regex[key] = re.compile(key + '$')
+
+            if self._quick_reply_callbacks_key_regex[key].match(event.quick_reply_payload):
+                callbacks.append(self._quick_reply_callbacks[key])
+
+        return callbacks
+
+    def get_postback_callbacks(self, event):
+        callbacks = []
+        for key in self._button_callbacks.keys():
+            if key not in self._button_callbacks_key_regex:
+                self._button_callbacks_key_regex[key] = re.compile(key + '$')
+
+            if self._button_callbacks_key_regex[key].match(event.postback_payload):
+                callbacks.append(self._button_callbacks[key])
+
+        return callbacks
+
+
+class PageAsync(object):
+    def __init__(self, page_access_token, loop=False, **options):
+        self.page_access_token = page_access_token
+        self._after_send = options.pop('after_send', None)
+        self._page_id = None
+        self._page_name = None
+        if not loop:
+            raise ValueError("loop is mandatory")
+        self._loop = loop
+
+        # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking.
+        # these are only set by decorators
+
+    _webhook_handlers = {}
+
+    _quick_reply_callbacks = {}
+    _button_callbacks = {}
+
+    _quick_reply_callbacks_key_regex = {}
+    _button_callbacks_key_regex = {}
+
+    _after_send = None
+
+    async def _call_handler(self, name, func, *args, **kwargs):
+        if func is not None:
+            await func(*args, **kwargs)
+        elif name in self._webhook_handlers:
+            await self._webhook_handlers[name](*args, **kwargs)
+        else:
+            print("there's no %s handler" % name)
+
+    async def handle_webhook(self, payload, optin=None, message=None, echo=None, delivery=None,
+                             postback=None, read=None, account_linking=None):
+        data = json.loads(payload)
+
+        # Make sure this is a page subscription
+        if data.get("object") != "page":
+            print("Webhook failed, only support page subscription")
+            return False
+
+        # Iterate over each entry
+        # There may be multiple if batched
+        def get_events(data):
+            for entry in data.get("entry"):
+                for messaging in entry.get("messaging"):
+                    event = Event(messaging)
+                    yield event
+
+        for event in get_events(data):
+            if event.is_optin:
+                await self._call_handler('optin', optin, event)
+            elif event.is_echo:
+                await self._call_handler('echo', echo, event)
+            elif event.is_quick_reply:
+                event.matched_callbacks = self.get_quick_reply_callbacks(event)
+                await self._call_handler('message', message, event)
+                for callback in event.matched_callbacks:
+                    await callback(event.quick_reply_payload, event)
+            elif event.is_message and not event.is_echo and not event.is_quick_reply:
+                await self._call_handler('message', message, event)
+            elif event.is_delivery:
+                await self._call_handler('delivery', delivery, event)
+            elif event.is_postback:
+                event.matched_callbacks = self.get_postback_callbacks(event)
+                await self._call_handler('postback', postback, event)
+                for callback in event.matched_callbacks:
+                    await callback(event.postback_payload, event)
+            elif event.is_read:
+                await self._call_handler('read', read, event)
+            elif event.is_account_linking:
+                await self._call_handler('account_linking', account_linking, event)
+            else:
+                print("Webhook received unknown messagingEvent:", event)
+
+    @property
+    async def page_id(self):
+        if self._page_id is None:
+            await self._fetch_page_info()
+
+        return self._page_id
+
+    @property
+    async def page_name(self):
+        if self._page_name is None:
+            await self._fetch_page_info()
+
+        return self._page_name
+
+    async def _fetch_page_info(self):
+        tcpconnector = aiohttp.TCPConnector(family=socket.AF_INET, verify_ssl=False)
+        async with aiohttp.ClientSession(loop=self._loop, connector=tcpconnector) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/me",
+                                 data=json.dumps({"access_token": self.page_access_token}),
+                                 headers={'Content-type': 'application/json'})
+
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
+
+            data = json.loads(r.text())
+            if 'id' not in data or 'name' not in data:
+                raise ValueError('Could not fetch data : GET /v2.6/me')
+
+            self._page_id = data['id']
+            self._page_name = data['name']
+
+    async def get_user_profile(self, fb_user_id):
+        tcpconnector = aiohttp.TCPConnector(family=socket.AF_INET, verify_ssl=False)
+        async with aiohttp.ClientSession(loop=self._loop, connector=tcpconnector) as client:
+            r = await client.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
+                                 data=json.dumps({"access_token": self.page_access_token}),
+                                 headers={'Content-type': 'application/json'})
+
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
+
+        return json.loads(r.text())
+
+    async def _send(self, payload, callback=None):
+        tcpconnector = aiohttp.TCPConnector(family=socket.AF_INET, verify_ssl=False)
+        async with aiohttp.ClientSession(loop=self._loop, connector=tcpconnector) as client:
+            r = await client.post("https://graph.facebook.com/v2.6/me/messages",
+                                  params={"access_token": self.page_access_token},
+                                  data=payload.to_json(),
+                                  headers={'Content-type': 'application/json'})
+
+            if r.status != requests.codes.ok:
+                print('Invalid state received from facebook' + str(r.status) + ' ' + r.text())
+                return
+
+            if callback is not None:
+                callback(payload, r)
+
+            if self._after_send is not None:
+                self._after_send(payload, r)
+
+            r.text = r.text()
+            r.status_code = r.status
+            return r
+
+    async def send(self, recipient_id, message, quick_replies=None, metadata=None,
+                   notification_type=None, callback=None):
+        if sys.version_info >= (3, 0):
+            text = message if isinstance(message, str) else None
+        else:
+            text = message if isinstance(message, str) else message.encode('utf-8') if isinstance(message,
+                                                                                                  unicode) else None
+
+        attachment = message if not text else None
+
+        payload = Payload(recipient=Recipient(id=recipient_id),
+                          message=Message(text=text,
+                                          attachment=attachment,
+                                          quick_replies=quick_replies,
+                                          metadata=metadata),
+                          notification_type=notification_type)
+
+        return await self._send(payload, callback=callback)
+
+    async def typing_on(self, recipient_id):
+        payload = Payload(recipient=Recipient(id=recipient_id),
+                          sender_action=SenderAction.TYPING_ON)
+
+        await self._send(payload)
+
+    async def typing_off(self, recipient_id):
+        payload = Payload(recipient=Recipient(id=recipient_id),
+                          sender_action=SenderAction.TYPING_OFF)
+
+        self._send(payload)
+
+    async def mark_seen(self, recipient_id):
+        payload = Payload(recipient=Recipient(id=recipient_id),
+                          sender_action=SenderAction.MARK_SEEN)
+
+        await self._send(payload)
+
+    """
+    thread settings
+    """
+
+    async def _send_thread_settings(self, data):
+        tcpconnector = aiohttp.TCPConnector(family=socket.AF_INET, verify_ssl=False)
+        async with aiohttp.ClientSession(loop=self._loop, connector=tcpconnector) as client:
+            r = await client.post("https://graph.facebook.com/v2.6/me/thread_settings",
+                                  data=data,
+                                  headers={'Content-type': 'application/json'})
+
+            if r.status != requests.codes.ok:
+                print(r.text())
+                return
+
+    async def greeting(self, text):
+        if not text or not isinstance(text, str):
+            raise ValueError("greeting text error")
+
+        await self._send_thread_settings(json.dumps({
+            'setting_type': 'greeting',
+            'greeting': {
+                'text': text
+            }
+        }))
+
+    async def show_starting_button(self, payload):
+        if not payload or not isinstance(payload, str):
+            raise ValueError("show_starting_button payload error")
+
+        await self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "new_thread",
+            "call_to_actions": [{
+                "payload": payload
+            }]
+        }))
+
+    async def hide_starting_button(self):
+        await self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "new_thread"
+        }))
+
+    async def show_persistent_menu(self, buttons):
+        if not buttons or not isinstance(buttons, list):
+            raise ValueError('show_persistent_menu buttons error')
+
+        buttons = Buttons.convert_shortcut_buttons(buttons)
+
+        buttons_dict = []
+        for button in buttons:
+            if isinstance(button, ButtonWeb):
+                buttons_dict.append({
+                    "type": "web_url",
+                    "title": button.title,
+                    "url": button.url
+                })
+            elif isinstance(button, ButtonPostBack):
+                buttons_dict.append({
+                    "type": "postback",
+                    "title": button.title,
+                    "payload": button.payload
+                })
+            else:
+                raise ValueError('show_persistent_menu button type must be "url" or "postback"')
+
+        await self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread",
+            "call_to_actions": buttons_dict
+        }))
+
+    async def hide_persistent_menu(self):
+        await self._send_thread_settings(json.dumps({
+            "setting_type": "call_to_actions",
+            "thread_state": "existing_thread"
+        }))
+
+    """
+    decorations
+    """
+
+    def handle_optin(self, func):
+        self._webhook_handlers['optin'] = func
+
+    def handle_message(self, func):
+        self._webhook_handlers['message'] = func
+
+    def handle_echo(self, func):
+        self._webhook_handlers['echo'] = func
+
+    def handle_delivery(self, func):
+        self._webhook_handlers['delivery'] = func
+
+    def handle_postback(self, func):
+        self._webhook_handlers['postback'] = func
+
+    def handle_read(self, func):
+        self._webhook_handlers['read'] = func
+
+    def handle_account_linking(self, func):
+        self._webhook_handlers['account_linking'] = func
 
     def after_send(self, func):
         self._after_send = func
