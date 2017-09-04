@@ -4,6 +4,10 @@ FBMQ Changelog
 Latest
 ------
 
+2.3.0
+-----
+* Messenger Code API supported (@anton-nayshtut)
+
 2.2.0
 -----
 * Share Button template supported (@anton-nayshtut)
