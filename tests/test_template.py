@@ -85,13 +85,10 @@ class TemplateTest(unittest.TestCase):
                                                   {'type': 'web_url', 'title': 'title', 'value': 'https://test2.com'}])],
             top_element_style='large',
             buttons=[
-                { "title": "View More", "type": "postback", "payload": "payload" },
-                { "title": "View Less", "type": "postback", "payload": "payload"}]
-        )
+                { "title": "View More", "type": "postback", "payload": "payload" }])
 
         self.assertEquals(
-            '{"payload": {"buttons": [{"payload": "payload", "title": "View More", "type": "postback"}, '
-            '{"payload": "payload", "title": "View Less", "type": "postback"}], '
+            '{"payload": {"buttons": [{"payload": "payload", "title": "View More", "type": "postback"}], '
             '"elements": [{"buttons": [{"title": "title", "type": "web_url", "url": "https://test1.com"}], '
             '"image_url": "https://test.com1/img", "item_url": "https://test1.com", "subtitle": "subtitle1", "title": "generic1"}, '
             '{"buttons": [{"title": "title", "type": "web_url", "url": "https://test2.com"}], '
@@ -99,6 +96,21 @@ class TemplateTest(unittest.TestCase):
             '"template_type": "list", '
             '"top_element_style": "large"}, '
             '"type": "template"}', utils.to_json(listt))
+
+        with self.assertRaises(IndexError) as context:
+            listt = Template.List(
+                elements=[Template.GenericElement(title='generic1', subtitle='subtitle1', item_url='https://test1.com',
+                                                  image_url='https://test.com1/img')])
+
+        with self.assertRaises(IndexError) as context:
+            listt = Template.List(
+                elements=[Template.GenericElement(title='generic1', subtitle='subtitle1', item_url='https://test1.com',
+                                                  image_url='https://test.com1/img'),
+                          Template.GenericElement(title='generic2', subtitle='subtitle2', item_url='https://test2.com',
+                                                  image_url='https://test.com2/img')],
+                buttons=[
+                    {"title": "View More", "type": "postback", "payload": "payload"},
+                    {"title": "View More", "type": "postback", "payload": "payload"}])
 
     def test_account_link(self):
         link = Template.AccountLink(text="title", account_link_url="http://test.com", account_unlink_button=True)
