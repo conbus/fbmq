@@ -72,11 +72,12 @@ class ButtonShare(BaseButton):
 
 
 class Generic(object):
-    def __init__(self, elements):
+    def __init__(self, elements, square_image=False):
         self.type = 'template'
         self.payload = {
             'template_type': 'generic',
-            'elements': elements
+            'elements': elements,
+            'image_aspect_ratio': 'square' if square_image else 'horizontal'
         }
 
 

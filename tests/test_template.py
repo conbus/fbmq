@@ -67,11 +67,22 @@ class TemplateTest(unittest.TestCase):
                                               image_url='https://test.com/img',
                                               buttons=[
                                                   {'type': 'web_url', 'title': 'title', 'value': 'https://test.com'}])])
-
         self.assertEquals(
             '{"payload": {"elements": [{"buttons": [{"title": "title", "type": "web_url", "url": "https://test.com"}],'
             ' "image_url": "https://test.com/img", "item_url": "https://test.com", "subtitle": "subtitle",'
-            ' "title": "generic"}], "template_type": "generic"}, "type": "template"}', utils.to_json(generic))
+            ' "title": "generic"}], "image_aspect_ratio": "horizontal", "template_type": "generic"}, "type": "template"}', utils.to_json(generic))
+
+    def test_generic_square_image(self):
+        generic = Template.Generic(
+            elements=[Template.GenericElement(title='generic', subtitle='subtitle', item_url='https://test.com',
+                                              image_url='https://test.com/img',
+                                              buttons=[
+                                                  {'type': 'web_url', 'title': 'title', 'value': 'https://test.com'}])],
+            square_image=True)
+        self.assertEquals(
+            '{"payload": {"elements": [{"buttons": [{"title": "title", "type": "web_url", "url": "https://test.com"}],'
+            ' "image_url": "https://test.com/img", "item_url": "https://test.com", "subtitle": "subtitle",'
+            ' "title": "generic"}], "image_aspect_ratio": "square", "template_type": "generic"}, "type": "template"}', utils.to_json(generic))
 
     def test_list(self):
         listt = Template.List(
