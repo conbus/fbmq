@@ -194,7 +194,7 @@ quick_replies = [
 # you can use a dict instead of a QuickReply class
 #
 # quick_replies = [{'title': 'Action', 'payload': 'PICK_ACTION'},
-#                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}}
+#                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}]
 
 
 page.send(recipient_id, 
