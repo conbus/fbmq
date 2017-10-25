@@ -3,6 +3,8 @@ from distutils.core import setup
 
 
 long_description = ''
+tests_require = ['responses', 'mock']
+
 
 try:
     import pypandoc
@@ -33,5 +35,7 @@ setup(name='fbmq',
       license='MIT',
       packages=['fbmq'],
       install_requires=['requests>=2.0', 'flask'],
+      tests_require=tests_require,
+      extras_require={'test': tests_require},
       keywords='Facebook Messenger Platform Chatbot',
       )
