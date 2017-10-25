@@ -197,7 +197,11 @@ class Page(object):
         # There may be multiple if batched
         def get_events(data):
             for entry in data.get("entry"):
-                for messaging in entry.get("messaging"):
+                messagings = entry.get("messaging")
+                if not messagings:
+                    print("Webhook received unsupported Entry:", entry)
+                    continue
+                for messaging in messagings:
                     event = Event(messaging)
                     yield event
 
@@ -227,7 +231,7 @@ class Page(object):
             elif event.is_referral:
                 self._call_handler('referral', referral, event)
             else:
-                print("Webhook received unknown messagingEvent:", event)
+                print("Webhook received unknown messaging Event:", event)
 
     @property
     def page_id(self):

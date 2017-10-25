@@ -675,3 +675,31 @@ class PageTest(unittest.TestCase):
             "setting_type": "call_to_actions",
             "thread_state": "existing_thread"
         }))
+
+    def test_unsupported_entry(self):
+        bug_str = """
+        {
+            "object":"page",
+            "entry":[
+                {
+                    "id":"214236215771147",
+                    "time":1502997235746,
+                    "standby":[
+                        {
+                            "recipient":{
+                                "id":"214236215771147"
+                            },
+                            "timestamp":1502997235746,
+                            "sender":{
+                                "id":"143792855957756q9"
+                            },
+                            "postback":{
+                                "title":"Get Started"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        """
+        self.page.handle_webhook(bug_str)
