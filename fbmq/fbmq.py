@@ -248,7 +248,7 @@ class Page(object):
         return self._page_name
 
     def _fetch_page_info(self):
-        r = requests.get("https://graph.facebook.com/v2.6/me",
+        r = requests.get("https://graph.facebook.com/v2.10/me",
                          params={"access_token": self.page_access_token},
                          headers={'Content-type': 'application/json'})
 
@@ -258,13 +258,13 @@ class Page(object):
 
         data = json.loads(r.text)
         if 'id' not in data or 'name' not in data:
-            raise ValueError('Could not fetch data : GET /v2.6/me')
+            raise ValueError('Could not fetch data : GET /v2.10/me')
 
         self._page_id = data['id']
         self._page_name = data['name']
 
     def get_user_profile(self, fb_user_id):
-        r = requests.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
+        r = requests.get("https://graph.facebook.com/v2.10/%s" % fb_user_id,
                          params={"access_token": self.page_access_token},
                          headers={'Content-type': 'application/json'})
 
@@ -281,7 +281,7 @@ class Page(object):
         if ref:
             d['data'] = {'ref': ref}
 
-        r = requests.post("https://graph.facebook.com/v2.6/me/messenger_codes",
+        r = requests.post("https://graph.facebook.com/v2.10/me/messenger_codes",
                           params={"access_token": self.page_access_token},
                           json=d,
                           headers={'Content-type': 'application/json'})
@@ -291,12 +291,12 @@ class Page(object):
 
         data = json.loads(r.text)
         if 'uri' not in data:
-            raise ValueError('Could not fetch messener code : GET /v2.6/me')
+            raise ValueError('Could not fetch messener code : GET /v2.10/me')
 
         return data['uri']
 
     def _send(self, payload, callback=None):
-        r = requests.post("https://graph.facebook.com/v2.6/me/messages",
+        r = requests.post("https://graph.facebook.com/v2.10/me/messages",
                           params={"access_token": self.page_access_token},
                           data=payload.to_json(),
                           headers={'Content-type': 'application/json'})
@@ -353,7 +353,7 @@ class Page(object):
     """
 
     def _send_thread_settings(self, data):
-        r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings",
+        r = requests.post("https://graph.facebook.com/v2.10/me/thread_settings",
                           params={"access_token": self.page_access_token},
                           data=data,
                           headers={'Content-type': 'application/json'})
