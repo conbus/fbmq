@@ -4,6 +4,10 @@ FBMQ Changelog
 Latest
 ------
 
+2.3.2
+-----
+* Fixed Issue #28: page.handle_webhook does not handle empty message
+
 2.3.1
 -----
 * Generic Template: image_aspect_ratio supported (@anton-nayshtut)
