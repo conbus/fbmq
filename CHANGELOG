@@ -4,6 +4,14 @@ FBMQ Changelog
 Latest
 ------
 
+2.4.1
+-----
+* CHANGELOG adjusted
+
+2.4.0
+-----
+* Messenger Profile API adopted
+
 2.3.2
 -----
 * Fixed Issue #28: page.handle_webhook does not handle empty message
