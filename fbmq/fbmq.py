@@ -6,6 +6,124 @@ import requests
 from .payload import *
 from .template import *
 
+# See https://developers.facebook.com/docs/messenger-platform/messenger-profile/supported-locales
+SUPPORTED_LOCALES=[
+    "default",
+    "en_US",
+    "ca_ES",
+    "cs_CZ",
+    "cx_PH",
+    "cy_GB",
+    "da_DK",
+    "de_DE",
+    "eu_ES",
+    "en_UD",
+    "es_LA",
+    "es_ES",
+    "gn_PY",
+    "fi_FI",
+    "fr_FR",
+    "gl_ES",
+    "hu_HU",
+    "it_IT",
+    "ja_JP",
+    "ko_KR",
+    "nb_NO",
+    "nn_NO",
+    "nl_NL",
+    "fy_NL",
+    "pl_PL",
+    "pt_BR",
+    "pt_PT",
+    "ro_RO",
+    "ru_RU",
+    "sk_SK",
+    "sl_SI",
+    "sv_SE",
+    "th_TH",
+    "tr_TR",
+    "ku_TR",
+    "zh_CN",
+    "zh_HK",
+    "zh_TW",
+    "af_ZA",
+    "sq_AL",
+    "hy_AM",
+    "az_AZ",
+    "be_BY",
+    "bn_IN",
+    "bs_BA",
+    "bg_BG",
+    "hr_HR",
+    "nl_BE",
+    "en_GB",
+    "et_EE",
+    "fo_FO",
+    "fr_CA",
+    "ka_GE",
+    "el_GR",
+    "gu_IN",
+    "hi_IN",
+    "is_IS",
+    "id_ID",
+    "ga_IE",
+    "jv_ID",
+    "kn_IN",
+    "kk_KZ",
+    "lv_LV",
+    "lt_LT",
+    "mk_MK",
+    "mg_MG",
+    "ms_MY",
+    "mt_MT",
+    "mr_IN",
+    "mn_MN",
+    "ne_NP",
+    "pa_IN",
+    "sr_RS",
+    "so_SO",
+    "sw_KE",
+    "tl_PH",
+    "ta_IN",
+    "te_IN",
+    "ml_IN",
+    "uk_UA",
+    "uz_UZ",
+    "vi_VN",
+    "km_KH",
+    "tg_TJ",
+    "ar_AR",
+    "he_IL",
+    "ur_PK",
+    "fa_IR",
+    "ps_AF",
+    "my_MM",
+    "qz_MM",
+    "or_IN",
+    "si_LK",
+    "rw_RW",
+    "cb_IQ",
+    "ha_NG",
+    "ja_KS",
+    "br_FR",
+    "tz_MA",
+    "co_FR",
+    "as_IN",
+    "ff_NG",
+    "sc_IT",
+    "sz_PL",
+]
+
+
+class LocalizedObj():
+    def __init__(self, locale, obj):
+        if locale not in SUPPORTED_LOCALES:
+            raise ValueError("Unsupported locale: {}".format(locale))
+        if not obj:
+            raise ValueError("Object is mandatory")
+        self.locale = locale
+        self.obj = obj
+
 
 # I agree with him : http://stackoverflow.com/a/36937/3843242
 class NotificationType:
@@ -349,81 +467,103 @@ class Page(object):
         self._send(payload)
 
     """
-    thread settings
+    messenger profile (see https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api)
     """
 
-    def _send_thread_settings(self, data):
-        r = requests.post("https://graph.facebook.com/v2.6/me/thread_settings",
+    def _set_profile_property(self, pname, pval):
+        r = requests.post("https://graph.facebook.com/v2.6/me/messenger_profile",
                           params={"access_token": self.page_access_token},
-                          data=data,
+                          data=json.dumps({
+                              pname: pval
+                          }),
                           headers={'Content-type': 'application/json'})
 
         if r.status_code != requests.codes.ok:
             print(r.text)
 
-    def greeting(self, text):
-        if not text or not isinstance(text, str):
-            raise ValueError("greeting text error")
+    def _del_profile_property(self, pname):
+        r = requests.delete("https://graph.facebook.com/v2.6/me/messenger_profile",
+                            params={"access_token": self.page_access_token},
+                            data=json.dumps({
+                                'fields': [pname,]
+                            }),
+                            headers={'Content-type': 'application/json'})
 
-        self._send_thread_settings(json.dumps({
-            'setting_type': 'greeting',
-            'greeting': {
-                'text': text
-            }
-        }))
+        if r.status_code != requests.codes.ok:
+            print(r.text)
+
+    def greeting(self, text):
+        self.localized_greeting([LocalizedObj(locale="default", obj=text)])
+
+    def localized_greeting(self, locale_list):
+        if not locale_list:
+            raise ValueError("List of locales is mandatory")
+        pval = []
+        for l in locale_list:
+            if not isinstance(l, LocalizedObj):
+                raise ValueError("greeting type error")
+            if not isinstance(l.obj, str):
+                raise ValueError("greeting text error")
+            pval.append({
+                "locale": l.locale,
+                "text": l.obj
+            })
+        self._set_profile_property(pname="greeting", pval=pval)
+
+    def hide_greeting(self):
+        self._del_profile_property(pname="greeting")
 
     def show_starting_button(self, payload):
         if not payload or not isinstance(payload, str):
             raise ValueError("show_starting_button payload error")
-
-        self._send_thread_settings(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "new_thread",
-            "call_to_actions": [{
-                "payload": payload
-            }]
-        }))
+        self._set_profile_property(pname="get_started",
+                                   pval={"payload": payload})
 
     def hide_starting_button(self):
-        self._send_thread_settings(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "new_thread"
-        }))
+        self._del_profile_property(pname="get_started")
 
     def show_persistent_menu(self, buttons):
-        if not buttons or not isinstance(buttons, list):
-            raise ValueError('show_persistent_menu buttons error')
+        self.show_localized_persistent_menu([LocalizedObj(locale="default",
+                                                          obj=buttons)])
 
-        buttons = Buttons.convert_shortcut_buttons(buttons)
+    def show_localized_persistent_menu(self, locale_list):
+        if not locale_list:
+            raise ValueError("List of locales is mandatory")
+        pval = []
+        for l in locale_list:
+            if not isinstance(l, LocalizedObj):
+                raise ValueError("persistent_menu error")
+            if not isinstance(l.obj, list):
+                raise ValueError("menu call_to_actions error")
 
-        buttons_dict = []
-        for button in buttons:
-            if isinstance(button, ButtonWeb):
-                buttons_dict.append({
-                    "type": "web_url",
-                    "title": button.title,
-                    "url": button.url
-                })
-            elif isinstance(button, ButtonPostBack):
-                buttons_dict.append({
-                    "type": "postback",
-                    "title": button.title,
-                    "payload": button.payload
-                })
-            else:
-                raise ValueError('show_persistent_menu button type must be "url" or "postback"')
+            buttons = Buttons.convert_shortcut_buttons(l.obj)
 
-        self._send_thread_settings(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "existing_thread",
-            "call_to_actions": buttons_dict
-        }))
+            buttons_dict = []
+            for button in buttons:
+                if isinstance(button, ButtonWeb):
+                    buttons_dict.append({
+                        "type": "web_url",
+                        "title": button.title,
+                        "url": button.url
+                    })
+                elif isinstance(button, ButtonPostBack):
+                    buttons_dict.append({
+                        "type": "postback",
+                        "title": button.title,
+                        "payload": button.payload
+                    })
+                else:
+                    raise ValueError('show_persistent_menu button type must be "url" or "postback"')
+
+            pval.append({
+                "locale": l.locale,
+                "call_to_actions": buttons_dict
+            })
+        self._set_profile_property(pname="persistent_menu", pval=pval)
+
 
     def hide_persistent_menu(self):
-        self._send_thread_settings(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "existing_thread"
-        }))
+        self._del_profile_property(pname="persistent_menu")
 
     """
     decorations

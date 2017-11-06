@@ -1,18 +1,75 @@
 import unittest
 import json
 import mock
-from fbmq.fbmq import Page
+import responses
+from fbmq.fbmq import Page, LocalizedObj
 from fbmq import payload as Payload
 from fbmq import attachment as Attachment
 from fbmq import template as Template
 from fbmq import utils
 
 
+class MessengerAPIMock():
+    GET = responses.GET
+    PUT = responses.PUT
+    POST = responses.POST
+    DELETE = responses.DELETE
+    METHODS = [responses.GET, responses.PUT, responses.POST, responses.DELETE]
+
+    def __init__(self, subpath, expected=None, method=None, utest=None):
+        self.subpath = subpath
+        self.expected = None
+        self.method = method if method else self.POST
+        self.utest = utest
+        self.set_expected(expected=expected)
+        self.req_mock = responses.RequestsMock()
+
+    def __enter__(self):
+        self.req_mock.start()
+        self.req_mock.add(method=self.method,
+                          url="https://graph.facebook.com/v2.6/me/" +
+                              self.subpath)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.utest:
+            self.utest.assertEqual(self.nof_requests, 1,
+                                   "Invalid number of requests: {}".format(
+                                       self.nof_requests))
+            if self.expected:
+                self.utest.assertEqual(json.loads(self.req(0).body),
+                                       self.expected,
+                                       "Expectation Failed")
+        self.req_mock.stop(allow_assert=False)
+        self.req_mock.reset()
+
+    def set_expected(self, expected):
+        if not expected:
+            self.expected = None
+        elif isinstance(expected, str):
+            self.expected = json.loads(expected)
+        elif isinstance(expected, dict):
+            self.expected = expected
+        else:
+            assert "Bad expected type"
+
+    def req(self, idx):
+        return self.req_mock.calls[idx].request if idx < self.nof_requests \
+            else None
+
+    @property
+    def nof_requests(self):
+        return len(self.req_mock.calls)
+
+    @property
+    def as_expected(self):
+        return self.last_req and self.last_req.parsed_body == self.expected
+
+
 class PageTest(unittest.TestCase):
     def setUp(self):
         self.page = Page('TOKEN')
         self.page._send = mock.MagicMock()
-        self.page._send_thread_settings = mock.MagicMock()
         self.page._fetch_page_info = mock.MagicMock()
 
     def test_send(self):
@@ -605,76 +662,213 @@ class PageTest(unittest.TestCase):
                 counter3()
 
     def test_greeting(self):
-        self.page.greeting("hello")
-        self.page._send_thread_settings.assert_called_once_with(json.dumps(json.loads("""
-        {
-            "setting_type": "greeting",
-            "greeting": {
-                "text": "hello"
+        exp = """
+            {
+                "greeting": [
+                    {
+                        "locale":"default",
+                        "text":"hello"
+                    }
+                ]
             }
-        }
-        """)))
+            """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              utest=self) as m:
+            self.page.greeting("hello")
 
-        with self.assertRaises(ValueError):
-            self.page.greeting(1)
+        with MessengerAPIMock(subpath="messenger_profile"):
+            with self.assertRaises(ValueError):
+                self.page.greeting(1)
+
+    def test_localized_greeting(self):
+        exp="""
+            {
+                "greeting": [
+                    {
+                        "locale":"default",
+                        "text":"hello"
+                    },
+                    {
+                        "locale":"en_US",
+                        "text":"hello US"
+                    }
+                ]
+            }
+            """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              utest=self) as m:
+            self.page.localized_greeting(
+                [LocalizedObj(locale="default", obj="hello"),
+                 LocalizedObj(locale="en_US", obj="hello US")])
+
+        with MessengerAPIMock(subpath="messenger_profile"):
+            with self.assertRaises(ValueError):
+                self.page.localized_greeting(
+                    [LocalizedObj(locale="bad", obj="hello")])
+
+    def test_hide_greeting(self):
+        exp="""
+        {
+            "fields": [
+                "greeting"
+            ]
+        }
+        """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              method=MessengerAPIMock.DELETE, utest=self) as m:
+            self.page.hide_greeting()
 
     def test_starting_button(self):
-        self.page.show_starting_button("PAYLOAD")
-        self.page._send_thread_settings.assert_called_once_with(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "new_thread",
-            "call_to_actions": [{
+        exp="""
+        {
+            "get_started": {
                 "payload": "PAYLOAD"
-            }]
-        }))
+            }
+        }
+        """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              utest=self) as m:
+            self.page.show_starting_button("PAYLOAD")
 
-        self.page.hide_starting_button()
-        self.page._send_thread_settings.assert_called_with(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "new_thread"
-        }))
+        with MessengerAPIMock(subpath="messenger_profile"):
+            with self.assertRaises(ValueError):
+                self.page.show_starting_button(1)
 
-        with self.assertRaises(ValueError):
-            self.page.show_starting_button(1)
+    def test_hide_starting_button(self):
+        exp="""
+        {
+            "fields": [
+                "get_started"
+            ]
+        }
+        """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              method=MessengerAPIMock.DELETE, utest=self) as m:
+            self.page.hide_starting_button()
 
     def test_persistent_menu(self):
-        self.page.show_persistent_menu([{'type':'postback', 'title':'yes', 'payload':'hobbang'},
-                                        {'type':'web_url', 'title':'url', 'value':'url'},
-                                        Template.ButtonPostBack('ho', 'bbang')])
+        exp = """
+        {
+            "persistent_menu": [
+                {
+                    "locale":"default",
+                    "call_to_actions": [
+                        {
+                            "type": "postback",
+                            "title": "yes",
+                            "payload": "hobbang"
+                        },
+                        {
+                            "type": "web_url",
+                            "title": "url",
+                            "url": "url"
+                        },
+                        {
+                            "type": "postback",
+                            "title": "ho",
+                            "payload": "bbang"
+                        }
+                    ]
+                }
+            ]
+        }
+        """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              utest=self) as m:
+            self.page.show_persistent_menu(
+                [{'type':'postback', 'title':'yes', 'payload':'hobbang'},
+                 {'type':'web_url', 'title':'url', 'value':'url'},
+                 Template.ButtonPostBack('ho', 'bbang')])
 
-        self.page._send_thread_settings.assert_called_with(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "existing_thread",
-            "call_to_actions": [{'type':'postback', 'title':'yes', 'payload':'hobbang'},
-                                {'type':'web_url', 'title':'url', 'url':'url'},
-                                {'type':'postback', 'title':'ho', 'payload':'bbang'}]
-        }))
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp):
+            with self.assertRaises(ValueError):
+                self.page.show_persistent_menu("hi")
 
-        self.page.show_persistent_menu([Template.ButtonPostBack('ho', 'bbang'),
-                                        Template.ButtonWeb('title', 'url')])
+            with self.assertRaises(ValueError):
+                self.page.show_persistent_menu([Template.ButtonPhoneNumber('ho', 'bbang'),
+                                                Template.ButtonWeb('title', 'url')])
 
-        self.page._send_thread_settings.assert_called_with(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "existing_thread",
-            "call_to_actions": [{'type':'postback', 'title':'ho', 'payload':'bbang'},
-                                {'type':'web_url', 'title':'title', 'url':'url'}]
-        }))
+            with self.assertRaises(ValueError):
+                self.page.show_persistent_menu([{'type':'ho'}])
 
-        with self.assertRaises(ValueError):
-            self.page.show_persistent_menu("hi")
+    def test_localized_persistent_menu(self):
+        exp = """
+        {
+            "persistent_menu": [
+                {
+                    "locale":"default",
+                    "call_to_actions": [
+                        {
+                            "type": "postback",
+                            "title": "yes",
+                            "payload": "hobbang"
+                        },
+                        {
+                            "type": "web_url",
+                            "title": "url",
+                            "url": "url"
+                        },
+                        {
+                            "type": "postback",
+                            "title": "ho",
+                            "payload": "bbang"
+                        }
+                    ]
+                },
+                {
+                    "locale":"zh_CN",
+                    "call_to_actions": [
+                        {
+                            "type": "postback",
+                            "title": "yes CN",
+                            "payload": "hobbang_cn"
+                        },
+                        {
+                            "type": "web_url",
+                            "title": "url CN",
+                            "url": "url_cn"
+                        },
+                        {
+                            "type": "postback",
+                            "title": "ho CN",
+                            "payload": "bbang_cn"
+                        }
+                    ]
+                }
+            ]
+        }
+        """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              utest=self) as m:
+            self.page.show_localized_persistent_menu([
+                LocalizedObj(
+                    locale="default",
+                    obj=[
+                        {'type':'postback', 'title':'yes',
+                         'payload':'hobbang'},
+                        {'type':'web_url', 'title':'url', 'value':'url'},
+                        Template.ButtonPostBack('ho', 'bbang')]),
+                LocalizedObj(
+                    locale="zh_CN",
+                    obj=[
+                        {'type': 'postback', 'title': 'yes CN',
+                         'payload': 'hobbang_cn'},
+                        {'type': 'web_url', 'title': 'url CN',
+                         'value': 'url_cn'},
+                        Template.ButtonPostBack('ho CN', 'bbang_cn')]),
+            ])
 
-        with self.assertRaises(ValueError):
-            self.page.show_persistent_menu([Template.ButtonPhoneNumber('ho', 'bbang'),
-                                            Template.ButtonWeb('title', 'url')])
-
-        with self.assertRaises(ValueError):
-            self.page.show_persistent_menu([{'type':'ho'}])
-
-        self.page.hide_persistent_menu()
-        self.page._send_thread_settings.assert_called_with(json.dumps({
-            "setting_type": "call_to_actions",
-            "thread_state": "existing_thread"
-        }))
+    def test_hide_persistent_menu(self):
+        exp="""
+        {
+            "fields": [
+                "persistent_menu"
+            ]
+        }
+        """
+        with MessengerAPIMock(subpath="messenger_profile", expected=exp,
+                              method=MessengerAPIMock.DELETE, utest=self) as m:
+            self.page.hide_persistent_menu()
 
     def test_unsupported_entry(self):
         bug_str = """
