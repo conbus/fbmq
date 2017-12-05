@@ -2,11 +2,8 @@ import unittest
 import json
 import mock
 import responses
-from fbmq.fbmq import Page, LocalizedObj
-from fbmq import payload as Payload
-from fbmq import attachment as Attachment
+from fbmq.fbmq import Page, LocalizedObj, SUPPORTED_API_VERS
 from fbmq import template as Template
-from fbmq import utils
 
 
 class MessengerAPIMock():
@@ -16,19 +13,21 @@ class MessengerAPIMock():
     DELETE = responses.DELETE
     METHODS = [responses.GET, responses.PUT, responses.POST, responses.DELETE]
 
-    def __init__(self, subpath, expected=None, method=None, utest=None):
+    def __init__(self, subpath, expected=None, method=None, utest=None,
+                 api_ver=None):
         self.subpath = subpath
         self.expected = None
         self.method = method if method else self.POST
         self.utest = utest
         self.set_expected(expected=expected)
         self.req_mock = responses.RequestsMock()
+        self.api_ver = api_ver if api_ver else 'v2.6'
 
     def __enter__(self):
         self.req_mock.start()
         self.req_mock.add(method=self.method,
-                          url="https://graph.facebook.com/v2.6/me/" +
-                              self.subpath)
+                          url="https://graph.facebook.com/" + self.api_ver +
+                              "/me/" + self.subpath)
         return self
 
     def __exit__(self, type, value, traceback):
@@ -64,6 +63,18 @@ class MessengerAPIMock():
     @property
     def as_expected(self):
         return self.last_req and self.last_req.parsed_body == self.expected
+
+
+class PageApiVerTest(unittest.TestCase):
+    def test_supported_versions(self):
+        for v in SUPPORTED_API_VERS:
+            with MessengerAPIMock(subpath="messages", utest=self, api_ver=v)\
+                    as m:
+                Page('TOKEN', api_ver=v).send(12345, "hello world")
+
+    def test_unsupported_version(self):
+        with self.assertRaises(ValueError):
+            Page('TOKEN', api_ver='bad_ver')
 
 
 class PageTest(unittest.TestCase):
