@@ -6,6 +6,17 @@ import requests
 from .payload import *
 from .template import *
 
+
+# See https://developers.facebook.com/docs/graph-api/changelog
+SUPPORTED_API_VERS=[
+    "v2.11",
+    "v2.10",
+    "v2.9",
+    "v2.8",
+    "v2.7",
+    "v2.6",
+]
+
 # See https://developers.facebook.com/docs/messenger-platform/messenger-profile/supported-locales
 SUPPORTED_LOCALES=[
     "default",
@@ -279,6 +290,9 @@ class Page(object):
     def __init__(self, page_access_token, **options):
         self.page_access_token = page_access_token
         self._after_send = options.pop('after_send', None)
+        self._api_ver = options.pop('api_ver', 'v2.6')
+        if self._api_ver not in SUPPORTED_API_VERS:
+            raise ValueError('Unsupported API Version : ' + self._api_ver)
         self._page_id = None
         self._page_name = None
 
@@ -293,6 +307,9 @@ class Page(object):
     _button_callbacks_key_regex = {}
 
     _after_send = None
+
+    def _api_uri(self, sub):
+        return "https://graph.facebook.com/" + self._api_ver + "/" + sub
 
     def _call_handler(self, name, func, *args, **kwargs):
         if func is not None:
@@ -366,7 +383,7 @@ class Page(object):
         return self._page_name
 
     def _fetch_page_info(self):
-        r = requests.get("https://graph.facebook.com/v2.6/me",
+        r = requests.get(self._api_uri("me"),
                          params={"access_token": self.page_access_token},
                          headers={'Content-type': 'application/json'})
 
@@ -376,13 +393,14 @@ class Page(object):
 
         data = json.loads(r.text)
         if 'id' not in data or 'name' not in data:
-            raise ValueError('Could not fetch data : GET /v2.6/me')
+            raise ValueError('Could not fetch data : GET /' + self._api_ver +
+                             '/me')
 
         self._page_id = data['id']
         self._page_name = data['name']
 
     def get_user_profile(self, fb_user_id):
-        r = requests.get("https://graph.facebook.com/v2.6/%s" % fb_user_id,
+        r = requests.get(self._api_uri(fb_user_id),
                          params={"access_token": self.page_access_token},
                          headers={'Content-type': 'application/json'})
 
@@ -399,7 +417,7 @@ class Page(object):
         if ref:
             d['data'] = {'ref': ref}
 
-        r = requests.post("https://graph.facebook.com/v2.6/me/messenger_codes",
+        r = requests.post(self._api_uri("me/messenger_codes"),
                           params={"access_token": self.page_access_token},
                           json=d,
                           headers={'Content-type': 'application/json'})
@@ -409,12 +427,13 @@ class Page(object):
 
         data = json.loads(r.text)
         if 'uri' not in data:
-            raise ValueError('Could not fetch messener code : GET /v2.6/me')
+            raise ValueError('Could not fetch messener code : GET /' +
+                             self._api_ver + '/me')
 
         return data['uri']
 
     def _send(self, payload, callback=None):
-        r = requests.post("https://graph.facebook.com/v2.6/me/messages",
+        r = requests.post(self._api_uri("me/messages"),
                           params={"access_token": self.page_access_token},
                           data=payload.to_json(),
                           headers={'Content-type': 'application/json'})
@@ -471,7 +490,7 @@ class Page(object):
     """
 
     def _set_profile_property(self, pname, pval):
-        r = requests.post("https://graph.facebook.com/v2.6/me/messenger_profile",
+        r = requests.post(self._api_uri("me/messenger_profile"),
                           params={"access_token": self.page_access_token},
                           data=json.dumps({
                               pname: pval
@@ -482,7 +501,7 @@ class Page(object):
             print(r.text)
 
     def _del_profile_property(self, pname):
-        r = requests.delete("https://graph.facebook.com/v2.6/me/messenger_profile",
+        r = requests.delete(self._api_uri("me/messenger_profile"),
                             params={"access_token": self.page_access_token},
                             data=json.dumps({
                                 'fields': [pname,]
