@@ -90,25 +90,25 @@ class PageTest(unittest.TestCase):
                                                 '[{"content_type": "text", "payload": "YES", "title": "Yes"}], '
                                                 '"text": "hello world"},'
                                                 ' "notification_type": null, '
-                                                '"recipient": {"id": 12345, "phone_number": null}, '
+                                                '"recipient": {"id": 12345}, '
                                                 '"sender_action": null}', callback=1)
 
     def test_typingon(self):
         self.page.typing_on(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
-                                                '"recipient": {"id": 1004, "phone_number": null}, '
+                                                '"recipient": {"id": 1004}, '
                                                 '"sender_action": "typing_on"}')
 
     def test_typingoff(self):
         self.page.typing_off(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
-                                                '"recipient": {"id": 1004, "phone_number": null}, '
+                                                '"recipient": {"id": 1004}, '
                                                 '"sender_action": "typing_off"}')
 
     def test_markseen(self):
         self.page.mark_seen(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
-                                                '"recipient": {"id": 1004, "phone_number": null}, '
+                                                '"recipient": {"id": 1004}, '
                                                 '"sender_action": "mark_seen"}')
 
     def test_handle_webhook_errors(self):

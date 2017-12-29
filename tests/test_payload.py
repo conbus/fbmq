@@ -22,6 +22,10 @@ class PayloadTest(unittest.TestCase):
         self.assertEquals(None, Payload.Message.convert_shortcut_quick_reply(None))
 
     def test_receipt(self):
+        q = Payload.Recipient(id=123456)
+        self.assertEquals('{"id": 123456}', utils.to_json(q))
+
+    def test_receipt_with_phone(self):
         q = Payload.Recipient(id=123456, phone_number='+8210')
         self.assertEquals('{"id": 123456, "phone_number": "+8210"}', utils.to_json(q))
 
@@ -42,7 +46,15 @@ class PayloadTest(unittest.TestCase):
                                   quick_replies=[{'title': 'Yes', 'payload': 'PICK_YES'}])
 
         with self.assertRaises(ValueError):
-            Payload.Payload(recipient=recipient, message=message, sender_action='NEW_ACTION')
+            Payload.Payload(recipient=recipient,
+                            message=message,
+                            sender_action='NEW_ACTION')
+
+        with self.assertRaises(ValueError):
+            Payload.Payload(recipient=recipient,
+                            message=message,
+                            sender_action='typing_off',
+                            notification_type='NEW_NOTIFICATION_TYPE')
 
         p = Payload.Payload(recipient=recipient,
                             message=message,
@@ -57,3 +69,4 @@ class PayloadTest(unittest.TestCase):
 
         self.assertTrue(p.__eq__(p))
         self.assertTrue(p.__eq__(utils.to_json(p)))
+
