@@ -28,7 +28,8 @@ class Payload(object):
 class Recipient(object):
     def __init__(self, id=None, phone_number=None):
         self.id = id
-        self.phone_number = phone_number
+        if phone_number is not None:
+            self.phone_number = phone_number
 
 
 class Message(object):
