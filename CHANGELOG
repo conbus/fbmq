@@ -4,6 +4,10 @@ FBMQ Changelog
 Latest
 ------
 
+2.4.3
+-----
+* Recipient's phone_number became optional (issue #47)
+
 2.4.2
 -----
 * API version control supported
