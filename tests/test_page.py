@@ -158,6 +158,19 @@ class PageTest(unittest.TestCase):
 
         self.assertEquals(2, self.page._fetch_page_info.call_count)
 
+    def test_set_webhook_handler(self):
+
+        def dummy_func():
+            pass
+
+        with self.assertRaises(ValueError):
+            self.page.set_webhook_handler("shouldfail", dummy_func)
+
+        self.page.set_webhook_handler("message", dummy_func)
+        self.assertEqual(self.page._webhook_handlers["message"], dummy_func)
+
+        # clean up
+        self.page._webhook_handlers["message"] = None
 
     def test_handle_webhook_message(self):
         payload = """
