@@ -592,6 +592,11 @@ class Page(object):
         Allows adding a webhook_handler as an alternative to the decorators
         """
         scope = scope.lower()
+
+        if scope == 'after_send':
+            self._after_send = callback
+            return
+
         if scope not in Page.WEBHOOK_ENDPOINTS:
             raise ValueError("The 'scope' argument must be one of {}.".format(Page.WEBHOOK_ENDPOINTS))
 
