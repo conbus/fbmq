@@ -296,8 +296,9 @@ class Page(object):
         self._page_id = None
         self._page_name = None
 
-    # webhook_handlers contains optin, message, echo, delivery, postback, read, account_linking, referral.
-    # these are only set by decorators
+    WEBHOOK_ENDPOINTS = ['optin', 'message', 'echo', 'delivery', 'postback', 'read', 'account_linking', 'referral']
+
+    # these are set by decorators or the 'set_webhook_handler' method
     _webhook_handlers = {}
 
     _quick_reply_callbacks = {}
@@ -580,13 +581,26 @@ class Page(object):
             })
         self._set_profile_property(pname="persistent_menu", pval=pval)
 
-
     def hide_persistent_menu(self):
         self._del_profile_property(pname="persistent_menu")
 
     """
-    decorations
+    handlers and decorations
     """
+    def set_webhook_handler(self, scope, callback):
+        """
+        Allows adding a webhook_handler as an alternative to the decorators
+        """
+        scope = scope.lower()
+
+        if scope == 'after_send':
+            self._after_send = callback
+            return
+
+        if scope not in Page.WEBHOOK_ENDPOINTS:
+            raise ValueError("The 'scope' argument must be one of {}.".format(Page.WEBHOOK_ENDPOINTS))
+
+        self._webhook_handlers[scope] = callback
 
     def handle_optin(self, func):
         self._webhook_handlers['optin'] = func
