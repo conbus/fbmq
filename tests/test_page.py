@@ -91,7 +91,8 @@ class PageTest(unittest.TestCase):
                                                 '"text": "hello world"},'
                                                 ' "notification_type": null, '
                                                 '"recipient": {"id": 12345}, '
-                                                '"sender_action": null}', callback=1)
+                                                '"sender_action": null, '
+                                                '"tag": null}', callback=1)
 
     def test_typingon(self):
         self.page.typing_on(1004)
@@ -163,7 +164,7 @@ class PageTest(unittest.TestCase):
         def dummy_func():
             pass
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(AttributeError):
             self.page.set_webhook_handler("shouldfail", dummy_func)
 
         self.page.set_webhook_handler("message", dummy_func)
