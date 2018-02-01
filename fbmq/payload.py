@@ -15,8 +15,9 @@ class Payload(object):
             raise ValueError('invalid notification_type : it must be one of "REGULAR","SILENT_PUSH","NO_PUSH"')
 
         self.notification_type = notification_type
+
         valid_tags = ["PAIRING_UPDATE", "APPLICATION_UPDATE", "ACCOUNT_UPDATE", "PAYMENT_UPDATE", "PERSONAL_FINANCE_UPDATE", "SHIPPING_UPDATE", "RESERVATION_UPDATE", "ISSUE_RESOLUTION", "APPOINTMENT_UPDATE", "GAME_EVENT", "TRANSPORTATION_UPDATE", "FEATURE_FUNCTIONALITY_UPDATE", "TICKET_UPDATE"]
-        if tag and tag not in valid_tags:
+        if tag is not None and tag not in valid_tags:
             raise ValueError('invalid tag: it must be one of ' + ', '.join(['"{}"'.format(v) for v in valid_tags]))
         self.tag = tag
 

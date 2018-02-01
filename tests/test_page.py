@@ -98,19 +98,22 @@ class PageTest(unittest.TestCase):
         self.page.typing_on(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
                                                 '"recipient": {"id": 1004}, '
-                                                '"sender_action": "typing_on"}')
+                                                '"sender_action": "typing_on", '
+                                                '"tag": null}')
 
     def test_typingoff(self):
         self.page.typing_off(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
                                                 '"recipient": {"id": 1004}, '
-                                                '"sender_action": "typing_off"}')
+                                                '"sender_action": "typing_off", '
+                                                '"tag": null}')
 
     def test_markseen(self):
         self.page.mark_seen(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
                                                 '"recipient": {"id": 1004}, '
-                                                '"sender_action": "mark_seen"}')
+                                                '"sender_action": "mark_seen", '
+                                                '"tag": null}')
 
     def test_handle_webhook_errors(self):
         payload = """
@@ -164,7 +167,7 @@ class PageTest(unittest.TestCase):
         def dummy_func():
             pass
 
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(ValueError):
             self.page.set_webhook_handler("shouldfail", dummy_func)
 
         self.page.set_webhook_handler("message", dummy_func)

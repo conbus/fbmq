@@ -61,6 +61,13 @@ class PayloadTest(unittest.TestCase):
                             sender_action='typing_off',
                             notification_type='NEW_NOTIFICATION_TYPE')
 
+        with self.assertRaises(ValueError):
+            p = Payload.Payload(recipient=recipient,
+                                message=message,
+                                sender_action='typing_off',
+                                notification_type='REGULAR',
+                                tag="BAD_TAG")
+
         p = Payload.Payload(recipient=recipient,
                             message=message,
                             sender_action='typing_off',
