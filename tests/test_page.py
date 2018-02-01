@@ -115,6 +115,17 @@ class PageTest(unittest.TestCase):
                                                 '"sender_action": "mark_seen", '
                                                 '"tag": null}')
 
+    def test_tag(self):
+        self.page.send(12345, "hello world", quick_replies=[{'title': 'Yes', 'payload': 'YES'}], tag="PAIRING_UPDATE", callback=1)
+        self.page._send.assert_called_once_with('{"message": {"attachment": null, "metadata": null, '
+                                                '"quick_replies": '
+                                                '[{"content_type": "text", "payload": "YES", "title": "Yes"}], '
+                                                '"text": "hello world"},'
+                                                ' "notification_type": null, '
+                                                '"recipient": {"id": 12345}, '
+                                                '"sender_action": null, '
+                                                '"tag": "PAIRING_UPDATE"}', callback=1)
+
     def test_handle_webhook_errors(self):
         payload = """
         {
