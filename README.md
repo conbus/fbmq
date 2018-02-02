@@ -48,7 +48,7 @@ how to handle messages from user to facebook page
 from flask import Flask, request
 from fbmq import Page
 
-page = fbmq.Page(PAGE_ACCESS_TOKEN)
+page = Page(PAGE_ACCESS_TOKEN)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
