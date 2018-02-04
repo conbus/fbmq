@@ -40,6 +40,11 @@ class PayloadTest(unittest.TestCase):
                           '"quick_replies": [{"content_type": "text", "payload": "PICK_YES", "title": "Yes"}], '
                           '"text": "hello"}', utils.to_json(m))
 
+        m = Payload.Message(text="hello", metadata="METADATA", quick_replies=[{'title': 'Yes', 'payload': 'PICK_YES'}])
+        self.assertEquals('{"attachment": null, "metadata": "METADATA", '
+                          '"quick_replies": [{"content_type": "text", "payload": "PICK_YES", "title": "Yes"}], '
+                          '"text": "hello"}', utils.to_json(m))
+
     def test_payload(self):
         recipient = Payload.Recipient(id=123456, phone_number='+8210')
         message = Payload.Message(text="hello", metadata="METADATA",
@@ -56,6 +61,13 @@ class PayloadTest(unittest.TestCase):
                             sender_action='typing_off',
                             notification_type='NEW_NOTIFICATION_TYPE')
 
+        with self.assertRaises(ValueError):
+            p = Payload.Payload(recipient=recipient,
+                                message=message,
+                                sender_action='typing_off',
+                                notification_type='REGULAR',
+                                tag="BAD_TAG")
+
         p = Payload.Payload(recipient=recipient,
                             message=message,
                             sender_action='typing_off',
@@ -65,8 +77,19 @@ class PayloadTest(unittest.TestCase):
             '{"message": {"attachment": null, "metadata": "METADATA", "quick_replies": '
             '[{"content_type": "text", "payload": "PICK_YES", "title": "Yes"}], "text": "hello"},'
             ' "notification_type": "REGULAR", "recipient": {"id": 123456, "phone_number": "+8210"},'
-            ' "sender_action": "typing_off"}', utils.to_json(p))
+            ' "sender_action": "typing_off", "tag": null}', utils.to_json(p))
+
+        p = Payload.Payload(recipient=recipient,
+                            message=message,
+                            sender_action='typing_off',
+                            notification_type='REGULAR',
+                            tag="PAIRING_UPDATE")
+
+        self.assertEquals(
+            '{"message": {"attachment": null, "metadata": "METADATA", "quick_replies": '
+            '[{"content_type": "text", "payload": "PICK_YES", "title": "Yes"}], "text": "hello"},'
+            ' "notification_type": "REGULAR", "recipient": {"id": 123456, "phone_number": "+8210"},'
+            ' "sender_action": "typing_off", "tag": "PAIRING_UPDATE"}', utils.to_json(p))
 
         self.assertTrue(p.__eq__(p))
         self.assertTrue(p.__eq__(utils.to_json(p)))
-

@@ -451,7 +451,7 @@ class Page(object):
         return r
 
     def send(self, recipient_id, message, quick_replies=None, metadata=None,
-             notification_type=None, callback=None):
+             notification_type=None, callback=None, tag=None):
         if sys.version_info >= (3, 0):
             text = message if isinstance(message, str) else None
         else:
@@ -464,7 +464,8 @@ class Page(object):
                                           attachment=attachment,
                                           quick_replies=quick_replies,
                                           metadata=metadata),
-                          notification_type=notification_type)
+                          notification_type=notification_type,
+                          tag=tag)
 
         return self._send(payload, callback=callback)
 

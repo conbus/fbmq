@@ -91,25 +91,40 @@ class PageTest(unittest.TestCase):
                                                 '"text": "hello world"},'
                                                 ' "notification_type": null, '
                                                 '"recipient": {"id": 12345}, '
-                                                '"sender_action": null}', callback=1)
+                                                '"sender_action": null, '
+                                                '"tag": null}', callback=1)
 
     def test_typingon(self):
         self.page.typing_on(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
                                                 '"recipient": {"id": 1004}, '
-                                                '"sender_action": "typing_on"}')
+                                                '"sender_action": "typing_on", '
+                                                '"tag": null}')
 
     def test_typingoff(self):
         self.page.typing_off(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
                                                 '"recipient": {"id": 1004}, '
-                                                '"sender_action": "typing_off"}')
+                                                '"sender_action": "typing_off", '
+                                                '"tag": null}')
 
     def test_markseen(self):
         self.page.mark_seen(1004)
         self.page._send.assert_called_once_with('{"message": null, "notification_type": null, '
                                                 '"recipient": {"id": 1004}, '
-                                                '"sender_action": "mark_seen"}')
+                                                '"sender_action": "mark_seen", '
+                                                '"tag": null}')
+
+    def test_tag(self):
+        self.page.send(12345, "hello world", quick_replies=[{'title': 'Yes', 'payload': 'YES'}], tag="PAIRING_UPDATE", callback=1)
+        self.page._send.assert_called_once_with('{"message": {"attachment": null, "metadata": null, '
+                                                '"quick_replies": '
+                                                '[{"content_type": "text", "payload": "YES", "title": "Yes"}], '
+                                                '"text": "hello world"},'
+                                                ' "notification_type": null, '
+                                                '"recipient": {"id": 12345}, '
+                                                '"sender_action": null, '
+                                                '"tag": "PAIRING_UPDATE"}', callback=1)
 
     def test_handle_webhook_errors(self):
         payload = """
