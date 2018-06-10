@@ -1,10 +1,10 @@
 import sys
-import json
 import re
 import requests
 
 from .payload import *
 from .template import *
+from .events import *
 
 
 # See https://developers.facebook.com/docs/graph-api/changelog
@@ -149,141 +149,52 @@ class SenderAction:
     MARK_SEEN = 'mark_seen'
 
 
-class Event(object):
-    def __init__(self, messaging=None):
-        if messaging is None:
-            messaging = {}
+def event_parser(messaging=None):
+    if messaging is None:
+        messaging = dict()
 
-        self.messaging = messaging
-        self.matched_callbacks = []
+    if 'message' in messaging:
+        is_echo = messaging.get('message', {}).get('is_echo')
+        if is_echo:
+            event_type = EchoEvent
+        else:
+            event_type = MessageEvent
+    elif 'delivery' in messaging:
+        event_type = DeliveriesEvent
+    elif 'read' in messaging:
+        event_type = ReadEvent.new_from_json_dict(messaging)
+    elif 'account_linking' in messaging:
+        event_type = AccountLinkingEvent
+    elif 'checkout_update' in messaging:
+        event_type = CheckOutUpdateEvent
+    elif 'game_play' in messaging:
+        event_type = GamePlayEvent.new_from_json_dict(messaging)
+    elif 'pass_thread_control' in messaging:
+        event_type = PassThreadEvent
+    elif 'take_thread_control' in messaging:
+        event_type = TakeThreadEvent
+    elif 'request_thread_control' in messaging:
+        event_type = RequestThreadEvent
+    elif 'app_roles' in messaging:
+        event_type = AppRoleEvent
+    elif 'optin' in messaging:
+        event_type = OptinEvent
+    elif 'payment' in messaging:
+        event_type = PaymentEvent
+    elif 'policy-enforcement' in messaging:
+        # must be modified later!!!!!!!!!!
+        event_type = PolicyEnforcementEvent
+    elif 'postback' in messaging:
+        event_type = PostBackEvent
+    elif 'referral' in messaging:
+        event_type = ReferralEvent
+    else:
+        print("Webhook received unknown messaging")
+        return
+    event = event_type.new_from_json_dict(messaging)
 
-    @property
-    def sender_id(self):
-        return self.messaging.get("sender", {}).get("id", None)
+    return event
 
-    @property
-    def recipient_id(self):
-        return self.messaging.get("recipient", {}).get("id", None)
-
-    @property
-    def timestamp(self):
-        return self.messaging.get("timestamp", None)
-
-    @property
-    def message(self):
-        return self.messaging.get("message", {})
-
-    @property
-    def message_text(self):
-        return self.message.get("text", None)
-
-    @property
-    def message_attachments(self):
-        return self.message.get("attachments", [])
-
-    @property
-    def quick_reply(self):
-        return self.messaging.get("message", {}).get("quick_reply", {})
-
-    @property
-    def postback(self):
-        return self.messaging.get("postback", {})
-
-    @property
-    def postback_referral(self):
-        return self.messaging.get("postback", {}).get("referral", {})
-
-    @property
-    def optin(self):
-        return self.messaging.get("optin", {})
-
-    @property
-    def account_linking(self):
-        return self.messaging.get("account_linking", {})
-
-    @property
-    def delivery(self):
-        return self.messaging.get("delivery", {})
-
-    @property
-    def read(self):
-        return self.messaging.get("read", {})
-
-    @property
-    def referral(self):
-        return self.messaging.get("referral", {})
-
-    @property
-    def message_mid(self):
-        return self.messaging.get("message", {}).get("mid", None)
-
-    @property
-    def message_seq(self):
-        return self.messaging.get("message", {}).get("seq", None)
-
-    @property
-    def is_optin(self):
-        return 'optin' in self.messaging
-
-    @property
-    def is_message(self):
-        return 'message' in self.messaging
-
-    @property
-    def is_text_message(self):
-        return self.messaging.get("message", {}).get("text", None) is not None
-
-    @property
-    def is_attachment_message(self):
-        return self.messaging.get("message", {}).get("attachments", None) is not None
-
-    @property
-    def is_echo(self):
-        return self.messaging.get("message", {}).get("is_echo", None) is not None
-
-    @property
-    def is_delivery(self):
-        return 'delivery' in self.messaging
-
-    @property
-    def is_postback(self):
-        return 'postback' in self.messaging
-
-    @property
-    def is_postback_referral(self):
-        return self.is_postback and 'referral' in self.postback
-
-    @property
-    def is_read(self):
-        return 'read' in self.messaging
-
-    @property
-    def is_account_linking(self):
-        return 'account_linking' in self.messaging
-
-    @property
-    def is_referral(self):
-        return 'referral' in self.messaging
-
-    @property
-    def is_quick_reply(self):
-        return self.messaging.get("message", {}).get("quick_reply", None) is not None
-
-    @property
-    def quick_reply_payload(self):
-        return self.messaging.get("message", {}).get("quick_reply", {}).get("payload", '')
-
-    @property
-    def postback_payload(self):
-        return self.messaging.get("postback", {}).get("payload", '')
-
-    @property
-    def referral_ref(self):
-        return self.messaging.get("referral", {}).get("ref", '')
-
-    @property
-    def postback_referral_ref(self):
-        return self.messaging.get("postback", {}).get("referral", {}).get("ref", '')
 
 
 class Page(object):
@@ -338,33 +249,32 @@ class Page(object):
                     print("Webhook received unsupported Entry:", entry)
                     continue
                 for messaging in messagings:
-                    event = Event(messaging)
+                    event = event_parser(messaging)
                     yield event
 
         for event in get_events(data):
-            if event.is_optin:
+            if isinstance(event, OptinEvent):
                 self._call_handler('optin', optin, event)
-            elif event.is_echo:
+            elif isinstance(event, EchoEvent):
                 self._call_handler('echo', echo, event)
-            elif event.is_quick_reply:
-                event.matched_callbacks = self.get_quick_reply_callbacks(event)
+            elif isinstance(event, MessageEvent):
                 self._call_handler('message', message, event)
-                for callback in event.matched_callbacks:
-                    callback(event.quick_reply_payload, event)
-            elif event.is_message and not event.is_echo and not event.is_quick_reply:
-                self._call_handler('message', message, event)
-            elif event.is_delivery:
+                if event.is_quick_reply:
+                    matched_callbacks = self.get_quick_reply_callbacks(event)
+                    for callback in matched_callbacks:
+                        callback(event.quick_reply_payload, event)
+            elif isinstance(event, DeliveriesEvent):
                 self._call_handler('delivery', delivery, event)
-            elif event.is_postback:
-                event.matched_callbacks = self.get_postback_callbacks(event)
+            elif isinstance(event, PostBackEvent):
+                matched_callbacks = self.get_postback_callbacks(event)
                 self._call_handler('postback', postback, event)
-                for callback in event.matched_callbacks:
-                    callback(event.postback_payload, event)
-            elif event.is_read:
+                for callback in matched_callbacks:
+                    callback(event.payload, event)
+            elif isinstance(event, ReadEvent):
                 self._call_handler('read', read, event)
-            elif event.is_account_linking:
+            elif isinstance(event, AccountLinkingEvent):
                 self._call_handler('account_linking', account_linking, event)
-            elif event.is_referral:
+            elif isinstance(event, ReferralEvent):
                 self._call_handler('referral', referral, event)
             else:
                 print("Webhook received unknown messaging Event:", event)
@@ -674,7 +584,7 @@ class Page(object):
             if key not in self._button_callbacks_key_regex:
                 self._button_callbacks_key_regex[key] = re.compile(key + '$')
 
-            if self._button_callbacks_key_regex[key].match(event.postback_payload):
+            if self._button_callbacks_key_regex[key].match(event.payload):
                 callbacks.append(self._button_callbacks[key])
 
         return callbacks
