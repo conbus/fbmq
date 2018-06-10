@@ -182,7 +182,9 @@ def event_parser(messaging=None):
     elif 'payment' in messaging:
         event_type = PaymentEvent
     elif 'policy-enforcement' in messaging:
-        # must be modified later!!!!!!!!!!
+        # key name must be changed for properly use to class instance.
+        messaging['policy_enforcement'] = messaging['policy-enforcement']
+        del messaging['policy-enforcement']
         event_type = PolicyEnforcementEvent
     elif 'postback' in messaging:
         event_type = PostBackEvent
