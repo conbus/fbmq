@@ -232,7 +232,10 @@ class Page(object):
             print("there's no %s handler" % name)
 
     def handle_webhook(self, payload, optin=None, message=None, echo=None, delivery=None,
-                       postback=None, read=None, account_linking=None, referral=None):
+                       postback=None, read=None, account_linking=None, referral=None,
+                       game_play=None, pass_thread_control=None, take_thread_control=None,
+                       request_thread_control=None, app_roles=None, policy_enforcement=None,
+                       checkout_update=None, payment=None):
         data = json.loads(payload)
 
         # Make sure this is a page subscription
@@ -276,6 +279,23 @@ class Page(object):
                 self._call_handler('account_linking', account_linking, event)
             elif isinstance(event, ReferralEvent):
                 self._call_handler('referral', referral, event)
+
+            elif isinstance(event, GamePlayEvent):
+                self._call_handler('game_play', game_play, event)
+            elif isinstance(event, PassThreadEvent):
+                self._call_handler('pass_thread_control', pass_thread_control, event)
+            elif isinstance(event, TakeThreadEvent):
+                self._call_handler('take_thread_control', take_thread_control, event)
+            elif isinstance(event, ReferralEvent):
+                self._call_handler('request_thread_control', request_thread_control, event)
+            elif isinstance(event, AppRoleEvent):
+                self._call_handler('app_roles', app_roles, event)
+            elif isinstance(event, PolicyEnforcementEvent):
+                self._call_handler('policy_enforcement', policy_enforcement, event)
+            elif isinstance(event ,CheckOutUpdateEvent):
+                self._call_handler('checkout_update', checkout_update, event)
+            elif isinstance(event, PaymentEvent):
+                self._call_handler('payment', payment, event)
             else:
                 print("Webhook received unknown messaging Event:", event)
 
@@ -536,6 +556,30 @@ class Page(object):
 
     def handle_referral(self, func):
         self._webhook_handlers['referral'] = func
+
+    def handle_game_play(self, func):
+        self._webhook_handlers['game_play'] = func
+
+    def handle_pass_thread_control(self, func):
+        self._webhook_handlers['pass_thread_control'] = func
+
+    def handle_take_thread_control(self, func):
+        self._webhook_handlers['take_thread_control'] = func
+
+    def handle_request_thread_control(self, func):
+        self._webhook_handlers['reqeust_thread_control'] = func
+
+    def handle_app_roles(self, func):
+        self._webhook_handlers['app_roles'] = func
+
+    def handle_policy_enforcement(self, func):
+        self._webhook_handlers['policy_enforcement'] = func
+
+    def handle_checkout_update(self, func):
+        self._webhook_handlers['checkout_update'] = func
+
+    def handle_payment(self, func):
+        self._webhook_handlers['payment'] = func
 
     def after_send(self, func):
         self._after_send = func

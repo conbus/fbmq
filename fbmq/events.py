@@ -351,7 +351,7 @@ class PaymentEvent(Event): #beta
 
 
 class StandByEvent(Event):
-    # sugget me to handle it.
+    # suggest me to handle it.
     pass
 
 
