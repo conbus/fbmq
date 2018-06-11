@@ -23,7 +23,7 @@ class Event(object):
         return cls(**data)
 
     def __str__(self):
-        return json.dumps(self.__name__)
+        return json.dumps(self.__class__.__name__)
 
 
 class MessageEvent(Event):
@@ -171,7 +171,7 @@ class GamePlayEvent(Event):
 
     @property
     def payload(self):
-        return self.game_play.get('score')
+        return self.game_play.get('payload')
 
 
 class PassThreadEvent(Event):
@@ -182,8 +182,8 @@ class PassThreadEvent(Event):
         self.pass_thread_control = pass_thread_control
 
     @property
-    def previous_owner_app_id(self):
-        return self.pass_thread_control.get('previous_owner_app_id')
+    def new_owner_app_id(self):
+        return self.pass_thread_control.get('new_owner_app_id')
 
     @property
     def metadata(self):
@@ -214,8 +214,8 @@ class RequestThreadEvent(Event):
         self.request_thread_control = request_thread_control
 
     @property
-    def previous_owner_app_id(self):
-        return self.request_thread_control.get('previous_owner_app_id')
+    def requested_owner_app_id(self):
+        return self.request_thread_control.get('requested_owner_app_id')
 
     @property
     def metadata(self):

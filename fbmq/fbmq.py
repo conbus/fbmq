@@ -288,7 +288,7 @@ class Page(object):
                 self._call_handler('pass_thread_control', pass_thread_control, event)
             elif isinstance(event, TakeThreadEvent):
                 self._call_handler('take_thread_control', take_thread_control, event)
-            elif isinstance(event, ReferralEvent):
+            elif isinstance(event, RequestThreadEvent):
                 self._call_handler('request_thread_control', request_thread_control, event)
             elif isinstance(event, AppRoleEvent):
                 self._call_handler('app_roles', app_roles, event)
@@ -569,7 +569,7 @@ class Page(object):
         self._webhook_handlers['take_thread_control'] = func
 
     def handle_request_thread_control(self, func):
-        self._webhook_handlers['reqeust_thread_control'] = func
+        self._webhook_handlers['request_thread_control'] = func
 
     def handle_app_roles(self, func):
         self._webhook_handlers['app_roles'] = func
