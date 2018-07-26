@@ -83,6 +83,10 @@ class Generic(object):
 
 class List(object):
     def __init__(self, elements, top_element_style=None, buttons=None):
+        if len(elements) < 2 or len(elements) > 4:
+            raise IndexError("limit the length of elements between 2 and 4")
+        if len(buttons) > 1:
+            raise IndexError("only one button can be approved")
         self.type = 'template'
         self.payload = {
             'template_type': 'list',
@@ -91,7 +95,7 @@ class List(object):
         if top_element_style:
             self.payload['top_element_style'] = top_element_style
         if buttons:
-            self.payload['buttons'] = buttons
+            self.payload['buttons'] = Buttons.convert_shortcut_buttons(buttons)
 
 
 class GenericElement(object):
