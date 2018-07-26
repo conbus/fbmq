@@ -4,6 +4,11 @@ FBMQ Changelog
 Latest
 ------
 
+2.5.0
+-----
+* Suggestions for maintaining the Event class #66 (@HwangWonYo)
+* Modify List template #34 (@hollalll726)
+
 2.4.4
 -----
 * Usage fix (@igo)
