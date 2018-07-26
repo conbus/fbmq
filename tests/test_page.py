@@ -4,6 +4,7 @@ import mock
 import responses
 from fbmq.fbmq import Page, LocalizedObj, SUPPORTED_API_VERS
 from fbmq import template as Template
+from fbmq import events as Event
 
 
 class MessengerAPIMock():
@@ -205,22 +206,14 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_message
         def handler1(event):
-            self.assertTrue(event.is_message)
-            self.assertTrue(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
+            self.assertTrue(event, Event.MessageEvent)
+            self.assertEqual(event.name, 'message')
+            self.assertEqual(event.attachments, [])
             self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
             self.assertEquals(event.timestamp, 1472026867080)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, 'hello world')
+            self.assertEquals(event.text, 'hello world')
             counter()
 
         self.page.handle_webhook(payload)
@@ -246,22 +239,13 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_read
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertTrue(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.ReadEvent))
+            self.assertEqual(event.name, 'read')
+            self.assertEqual(event.seq, 814)
+            self.assertEqual(event.watermark, 1472026868763)
             self.assertEquals(event.timestamp, 1472026869186)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
             counter()
 
         self.page.handle_webhook(payload)
@@ -288,22 +272,14 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_echo
         def handler1(event):
-            self.assertTrue(event.is_message)
-            self.assertTrue(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertTrue(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.EchoEvent))
+            self.assertEqual(event.name, 'echo')
+            self.assertEqual(event.mid, "mid.1472026868734:832ecbdfc1ffc30139")
+            self.assertEqual(event.app_id, 950864918368986)
+            self.assertEqual(event.text, 'hello')
             self.assertEquals(event.timestamp, 1472026868763)
             self.assertEquals(event.sender_id, '1691462197845448')
             self.assertEquals(event.recipient_id, '1134343043305865')
-            self.assertEquals(event.message_text, 'hello')
             counter()
 
         self.page.handle_webhook(payload)
@@ -328,22 +304,14 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_delivery
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertTrue(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.DeliveriesEvent))
+            self.assertEqual(event.name, 'delivery')
+            self.assertEqual(event.mids, ["mid.1472028395154:917e24ea99bc7d8f11"])
+            self.assertEqual(event.watermark, 1472028395190)
+            self.assertEqual(event.seq, 821)
             self.assertEquals(event.timestamp, 0)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
             counter()
 
         self.page.handle_webhook(payload)
@@ -368,22 +336,14 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_account_linking
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertTrue(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.AccountLinkingEvent))
+            self.assertEqual(event.name, 'account_linking')
+            self.assertEqual(event.status, 'linked')
+            self.assertTrue(event.is_linked)
+            self.assertEqual(event.authorization_code, "1234567890")
             self.assertEquals(event.timestamp, 1472028542079)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
             counter()
 
         self.page.handle_webhook(payload)
@@ -408,23 +368,15 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_referral
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertTrue(event.is_referral)
+            self.assertTrue(isinstance(event, Event.ReferralEvent))
+            self.assertEqual(event.name, 'referral')
+            self.assertEqual(event.source, 'SHORTLINK')
+            self.assertEqual(event.type, 'OPEN_THREAD')
+            self.assertEqual(event.ref, 'REFTEST')
+            self.assertEqual(event.referer_uri, None)
             self.assertEquals(event.timestamp, 1472028542079)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
-            self.assertEqual(event.referral_ref, 'REFTEST')
             counter()
 
         self.page.handle_webhook(payload)
@@ -450,24 +402,13 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_postback
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertTrue(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.PostBackEvent))
+            self.assertEqual(event.name, 'postback')
+            self.assertEqual(event.title, None)
+            self.assertEqual(event.payload, 'DEVELOPED_DEFINED_PAYLOAD')
             self.assertEquals(event.timestamp, 1472028006107)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
-            self.assertEquals(event.postback_payload, 'DEVELOPED_DEFINED_PAYLOAD')
-            self.assertEquals(event.postback_payload, event.postback.get('payload'))
             counter1()
 
         self.page.handle_webhook(payload)
@@ -494,26 +435,13 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_postback
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertTrue(event.is_postback)
-            self.assertTrue(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.PostBackEvent))
+            self.assertEqual(event.name, 'postback')
+            self.assertEquals(event.payload, 'DEVELOPED_DEFINED_PAYLOAD')
+            self.assertEquals(event.referral, {"ref":"REFTEST","source":"SHORTLINK","type": "OPEN_THREAD"})
             self.assertEquals(event.timestamp, 1472028006107)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
-            self.assertEquals(event.postback_payload, 'DEVELOPED_DEFINED_PAYLOAD')
-            self.assertEquals(event.postback_payload, event.postback.get('payload'))
-            self.assertEquals(event.postback_referral, event.postback.get('referral'))
-            self.assertEquals(event.postback_referral_ref, 'REFTEST')
             counter1()
 
         self.page.handle_webhook(payload)
@@ -525,6 +453,408 @@ class PageTest(unittest.TestCase):
             counter2()
 
         self.page.handle_webhook(payload, postback=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_game_play(self):
+        payload = """{"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+        "messaging":[{
+          "sender": {
+            "id": "<PSID>"
+          },
+          "recipient": {
+            "id": "<PAGE_ID>"
+          },
+          "timestamp": 1469111400000,
+          "game_play": {
+            "game_id": "<GAME-APP-ID>",
+            "player_id": "<PLAYER-ID>",
+            "context_type": "<CONTEXT-TYPE:SOLO|THREAD>",
+            "context_id": "<CONTEXT-ID>",
+            "score": "<SCORE-NUM>", 
+            "payload": "<PAYLOAD>"
+          }}]
+        }]}"""
+
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_game_play
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.GamePlayEvent))
+            self.assertEqual(event.name, 'game_play')
+            self.assertEqual(event.sender_id, "<PSID>")
+            self.assertEqual(event.recipient_id, "<PAGE_ID>")
+            self.assertEqual(event.game_id, "<GAME-APP-ID>")
+            self.assertEqual(event.player_id, "<PLAYER-ID>")
+            self.assertEqual(event.context_type, "<CONTEXT-TYPE:SOLO|THREAD>")
+            self.assertEqual(event.context_id, "<CONTEXT-ID>")
+            self.assertEqual(event.score, "<SCORE-NUM>")
+            self.assertEqual(event.payload, "<PAYLOAD>")
+            self.assertEqual(event.timestamp, 1469111400000)
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, game_play=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_pass_thread_control(self):
+        payload = """
+                {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+                "messaging":[{
+                      "sender":{
+                        "id":"<PSID>"
+                      },
+                      "recipient":{
+                        "id":"<PAGE_ID>"
+                      },
+                      "timestamp":1458692752478,
+                      "pass_thread_control":{
+                        "new_owner_app_id":"123456789",
+                        "metadata":"Additional content that the caller wants to set"
+                      }
+                    }]
+                }]}
+                """
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_pass_thread_control
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.PassThreadEvent))
+            self.assertEqual(event.name, 'pass_thread_control')
+            self.assertEqual(event.new_owner_app_id, "123456789")
+            self.assertEqual(event.metadata, "Additional content that the caller wants to set")
+            self.assertEquals(event.timestamp, 1458692752478)
+            self.assertEquals(event.sender_id, '<PSID>')
+            self.assertEquals(event.recipient_id, '<PAGE_ID>')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, pass_thread_control=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_take_thread_control(self):
+        payload = """
+                {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+                    "messaging":[{
+                      "sender":{
+                        "id":"<USER_ID>"
+                      },
+                      "recipient":{
+                        "id":"<PSID>"
+                      },
+                      "timestamp":1458692752478,
+                      "take_thread_control":{
+                        "previous_owner_app_id":"123456789",
+                        "metadata":"additional content that the caller wants to set"
+                      }
+                    }]
+                }]}
+                """
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_take_thread_control
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.TakeThreadEvent))
+            self.assertEqual(event.name, 'take_thread_control')
+            self.assertEqual(event.previous_owner_app_id, "123456789")
+            self.assertEqual(event.metadata, "additional content that the caller wants to set")
+            self.assertEquals(event.timestamp, 1458692752478)
+            self.assertEquals(event.sender_id, '<USER_ID>')
+            self.assertEquals(event.recipient_id, '<PSID>')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, take_thread_control=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_reqeust_thread_control(self):
+        payload = """
+                {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+                    "messaging":[{
+                      "sender":{
+                        "id":"<USER_ID>"
+                      },
+                      "recipient":{
+                        "id":"<PSID>"
+                      },
+                      "timestamp":1458692752478,
+                      "request_thread_control":{
+                        "requested_owner_app_id":123456789,
+                        "metadata":"additional content that the caller wants to set"
+                      }
+                    }]
+                }]}
+                """
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_request_thread_control
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.RequestThreadEvent))
+            self.assertEqual(event.name, 'request_thread_control')
+            self.assertEqual(event.requested_owner_app_id, 123456789)
+            self.assertEqual(event.metadata, "additional content that the caller wants to set")
+            self.assertEqual(event.timestamp, 1458692752478)
+            self.assertEqual(event.sender_id, '<USER_ID>')
+            self.assertEqual(event.recipient_id, '<PSID>')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, request_thread_control=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_app_roles(self):
+        payload = """
+                {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+                    "messaging":[{
+                      "recipient":{
+                        "id":"<PSID>"
+                      },
+                      "timestamp":1458692752478,
+                      "app_roles":{
+                        "123456789":["primary_receiver"]
+                      }
+                    }]
+                }]}
+                """
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_app_roles
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.AppRoleEvent))
+            self.assertEqual(event.name, 'app_roles')
+            self.assertEqual(event.app_roles, {"123456789": ["primary_receiver"]})
+            self.assertEqual(event.timestamp, 1458692752478)
+            self.assertEqual(event.recipient_id, '<PSID>')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, app_roles=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_policy_enforcement(self):
+        payload = """
+                {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+                    "messaging":[{
+                      "recipient":{
+                        "id":"PAGE_ID"
+                      },
+                      "timestamp":1458692752478,
+                      "policy-enforcement":{
+                        "action":"block",
+                        "reason":"The bot violated our Platform Policies (https://developers.facebook.com/policy/#messengerplatform). Common violations include sending out excessive spammy messages or being non-functional."
+                      }
+                    }]
+                }]}
+                """
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_policy_enforcement
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.PolicyEnforcementEvent))
+            self.assertEqual(event.name, 'policy_enforcement')
+            self.assertEqual(event.action, 'block')
+            self.assertEqual(event.reason, 'The bot violated our Platform Policies (https://developers.facebook.com/policy/#messengerplatform). Common violations include sending out excessive spammy messages or being non-functional.')
+            self.assertEqual(event.timestamp, 1458692752478)
+            self.assertEqual(event.recipient_id, 'PAGE_ID')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, policy_enforcement=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_checkout_update(self):
+        payload = """
+                {"object":"page","entry":[{"id":"1691462197845448","time":1472028006107,
+                    "messaging":[{
+                      "sender": {
+                        "id": "<PSID>"
+                      },
+                      "recipient": {
+                        "id": "<PAGE_ID>"
+                      },
+                      "timestamp": 1473204787206,
+                      "checkout_update": {
+                        "payload": "DEVELOPER_DEFINED_PAYLOAD",
+                        "shipping_address": {
+                          "id": 10105655000959552,
+                          "country": "US",
+                          "city": "MENLO PARK",
+                          "street1": "1 Hacker Way",
+                          "street2": "",
+                          "state": "CA",
+                          "postal_code": "94025"
+                        }
+                      }
+                    }]
+                }]}
+                """
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_checkout_update
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.CheckOutUpdateEvent))
+            self.assertEqual(event.name, 'checkout_update')
+            self.assertEqual(event.payload, 'DEVELOPER_DEFINED_PAYLOAD')
+            self.assertEqual(
+                event.shipping_address,
+                {
+                    "id": 10105655000959552,
+                    "country": "US",
+                    "city": "MENLO PARK",
+                    "street1": "1 Hacker Way",
+                    "street2": "",
+                    "state": "CA",
+                    "postal_code": "94025"
+                })
+            self.assertEqual(event.timestamp, 1473204787206)
+            self.assertEqual(event.sender_id, '<PSID>')
+            self.assertEqual(event.recipient_id, '<PAGE_ID>')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, checkout_update=handler2)
+        self.assertEquals(1, counter2.call_count)
+
+    def test_handle_payment(self):
+        payload = json.dumps({
+            "object": "page","entry": [{"id": "PAGE_ID", "time": 1473208792799,
+                  "messaging": [
+                    {
+                      "recipient": {
+                        "id": "PAGE_ID"
+                      },
+                      "timestamp": 1473208792799,
+                      "sender": {
+                        "id": "USER_ID"
+                      },
+                      "payment": {
+                        "payload": "DEVELOPER_DEFINED_PAYLOAD",
+                        "requested_user_info": {
+                          "shipping_address": {
+                            "street_1": "1 Hacker Way",
+                            "street_2": "",
+                            "city": "MENLO PARK",
+                            "state": "CA",
+                            "country": "US",
+                            "postal_code": "94025"
+                          },
+                          "contact_name": "Peter Chang",
+                          "contact_email": "peter@anemailprovider.com",
+                          "contact_phone": "+15105551234"
+                        },
+                       "payment_credential": {
+                          "provider_type": "stripe",
+                          "charge_id": "ch_18tmdBEoNIH3FPJHa60ep123",
+                          "fb_payment_id": "123456789",
+                        },      
+                        "amount": {
+                          "currency": "USD",
+                          "amount": "29.62"
+                        }, 
+                        "shipping_option_id": "123"
+                      }}]
+                }]}
+        )
+        counter1 = mock.MagicMock()
+
+        @self.page.handle_payment
+        def handler1(event):
+            self.assertTrue(isinstance(event, Event.PaymentEvent))
+            self.assertEqual(event.name, 'payment')
+            self.assertEqual(event.payload, 'DEVELOPER_DEFINED_PAYLOAD')
+            self.assertEqual(
+                event.requested_user_info,
+                {
+                    "shipping_address": {
+                        "street_1": "1 Hacker Way",
+                        "street_2": "",
+                        "city": "MENLO PARK",
+                        "state": "CA",
+                        "country": "US",
+                        "postal_code": "94025"
+                    },
+                    "contact_name": "Peter Chang",
+                    "contact_email": "peter@anemailprovider.com",
+                    "contact_phone": "+15105551234"
+                })
+            self.assertEqual(
+                event.payment_credential,
+                {
+                    "provider_type": "stripe",  # paypal if you are using paypal as provider
+                    "charge_id": "ch_18tmdBEoNIH3FPJHa60ep123",
+                    "fb_payment_id": "123456789",
+                }
+            )
+            self.assertEqual(
+                event.amount,
+                {
+                    "currency": "USD",
+                    "amount": "29.62"
+                }
+            )
+            self.assertEqual(event.shipping_option_id, '123')
+            self.assertEqual(event.timestamp, 1473208792799)
+            self.assertEqual(event.sender_id, 'USER_ID')
+            self.assertEqual(event.recipient_id, 'PAGE_ID')
+            counter1()
+
+        self.page.handle_webhook(payload)
+        self.assertEquals(1, counter1.call_count)
+
+        counter2 = mock.MagicMock()
+
+        def handler2(event):
+            counter2()
+
+        self.page.handle_webhook(payload, payment=handler2)
         self.assertEquals(1, counter2.call_count)
 
     def test_handle_webhook_postback_button_callback(self):
@@ -539,23 +869,10 @@ class PageTest(unittest.TestCase):
         counter2 = mock.MagicMock()
 
         def handler1(event):
-            self.assertFalse(event.is_message)
-            self.assertFalse(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
-            self.assertFalse(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertTrue(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertTrue(isinstance(event, Event.PostBackEvent))
             self.assertEquals(event.timestamp, 1472028006107)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, None)
-            self.assertEquals(event.postback_payload, event.postback.get('payload'))
             counter1()
 
         @self.page.callback(['DEVELOPED_DEFINED_PAYLOAD'], types=['POSTBACK'])
@@ -590,23 +907,13 @@ class PageTest(unittest.TestCase):
 
         @self.page.handle_message
         def handler1(event):
-            self.assertTrue(event.is_message)
-            self.assertTrue(event.is_text_message)
-            self.assertFalse(event.is_attachment_message)
+            self.assertTrue(isinstance(event, Event.MessageEvent))
+            self.assertEqual(event.name, 'message')
             self.assertTrue(event.is_quick_reply)
-            self.assertFalse(event.is_echo)
-            self.assertFalse(event.is_read)
-            self.assertFalse(event.is_postback)
-            self.assertFalse(event.is_postback_referral)
-            self.assertFalse(event.is_optin)
-            self.assertFalse(event.is_delivery)
-            self.assertFalse(event.is_account_linking)
-            self.assertFalse(event.is_referral)
+            self.assertEquals(event.text, 'Action')
             self.assertEquals(event.timestamp, 1472028637825)
             self.assertEquals(event.sender_id, '1134343043305865')
             self.assertEquals(event.recipient_id, '1691462197845448')
-            self.assertEquals(event.message_text, 'Action')
-            self.assertEquals(event.quick_reply_payload, event.quick_reply.get('payload'))
             counter1()
 
         @self.page.callback(['PICK_ACTION'], types=['QUICK_REPLY'])
