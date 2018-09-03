@@ -59,7 +59,7 @@ def webhook():
 def message_handler(event):
   """:type event: fbmq.Event"""
   sender_id = event.sender_id
-  message = event.message_text
+  message = event.message['text']
   
   page.send(sender_id, "thank you! your message is '%s'" % message)
 
@@ -98,9 +98,9 @@ A spec in detail - https://developers.facebook.com/docs/messenger-platform/webho
 
 `event.message` _dict_ : message dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received)
 
-`event.message_text` _str_ : `event.message.get('text')`
+`event.message['text']` _str_ : `event.message.get('text')`
 
-`event.message_attachments` _str_ : `event.message.get('attachments')`
+`event.message['attachments']` _str_ : `event.message.get('attachments')`
 
 `event.quick_reply` _dict_ : quick reply dict that is received. [more detail](https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received)
 
@@ -134,7 +134,7 @@ def webhook():
 def message_handler(event):
   """:type event: fbmq.Event"""
   sender_id = event.sender_id
-  message = event.message_text
+  message = event.message['text']
   
   page.send(sender_id, "thank you! your message is '%s'" % message)
 
